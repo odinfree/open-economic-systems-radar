@@ -1,0 +1,53 @@
+# Open Economic Systems Radar — Design Contract
+
+## Purpose
+
+Detect an early shift from closed, account-bound software commerce toward open,
+programmable economic activity. The dashboard must separate economic activity
+from capacity, developer interest, and manipulable transaction counters.
+
+## Audience
+
+Crypto product, strategy, research, and investment teams scanning for a change
+in machine-native commerce before it becomes obvious.
+
+## Visual direction
+
+An industrial observatory: dark graphite, warm paper text, signal orange, and
+acid green. Newsreader carries the editorial voice; IBM Plex Mono carries
+measurements. Dense but calm, with thin rules, large figures, and instrument
+labels rather than generic SaaS cards.
+
+## Information hierarchy
+
+1. Current shift state and confidence
+2. High-signal economic and behavioral indicators
+3. Machine-payment movement
+4. Open-rail capacity and open-market activity
+5. Developer momentum
+6. Concentration, source divergence, and authenticity warnings
+7. Ratios, definitions, and source provenance
+
+## Interaction
+
+- Range controls update every eligible line chart.
+- Metric definitions are visible without requiring a hidden help center.
+- Source links open the underlying public source.
+- Refresh requests use the current six-hour UTC window.
+
+## Accessibility
+
+- Minimum WCAG AA contrast for text and controls.
+- Visible keyboard focus.
+- Charts have concise text summaries and adjacent exact-value tables.
+- Motion is disabled under `prefers-reduced-motion`.
+- Color is never the only state signal.
+
+## Claim boundaries
+
+- The shift score is a transparent heuristic, not a forecast.
+- Stablecoin supply is capacity, not commerce.
+- DEX volume is open-market activity, not agent activity.
+- npm downloads are developer interest, not production adoption.
+- x402 and MPP source windows are labelled and never blended silently.
+- Raw transaction counts receive concentration and authenticity context.
