@@ -34,4 +34,16 @@ Review date: 2026-07-18
   coverage limit beside the charts.
 - The production browser reported zero console errors or warnings.
 
+## Copy and explanation checks
+
+- Section headings state the subject directly and contain no rhetorical
+  questions.
+- The hero refresh note, primary-indicator note, and repeated source note were
+  removed.
+- Technical concepts use 26 compact explanation controls with plain
+  definitions.
+- Every explanation control has a unique target, supports click and keyboard
+  use, closes with Escape, and stays within the desktop viewport.
+- Header anchors stop below the 72px sticky navigation.
+
 Final result: passed.

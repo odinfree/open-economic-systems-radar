@@ -156,6 +156,7 @@ describe("metric model", () => {
     expect(output.verdict.score).toBeLessThanOrEqual(100);
     expect(output.quality.top1TxShare).toBeCloseTo(0.7);
     expect(output.ratios).toHaveLength(6);
+    expect(new Set(output.ratios.map((ratio) => ratio.id)).size).toBe(6);
     expect(output.series.npmWeekly.length).toBeGreaterThan(5);
     expect(output.coverage.machine.days).toBe(30);
     expect(output.series.stablecoinSupply.at(-1)).toHaveProperty("supplyUsdMa30");

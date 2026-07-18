@@ -291,14 +291,6 @@ a:focus-visible {
   border-left: 1px solid var(--hairline);
 }
 
-.refresh-contract {
-  margin: 10px 0 0;
-  color: var(--faint);
-  font-family: var(--mono);
-  font-size: 9px;
-  line-height: 1.45;
-}
-
 .status-dot {
   width: 7px;
   height: 7px;
@@ -452,6 +444,7 @@ a:focus-visible {
   max-width: 1480px;
   margin: 0 auto;
   padding: 106px clamp(20px, 4vw, 68px) 0;
+  scroll-margin-top: 72px;
 }
 
 .section-heading {

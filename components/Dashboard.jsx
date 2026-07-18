@@ -176,7 +176,9 @@ function ratioValue(row) {
 
 function ratioRead(id, value) {
   if (id === "machine-dex-share") {
-    return value < 0.001 ? "Software payments are still tiny beside DEX volume." : "Software payments now register beside DEX volume.";
+    return value < 0.001
+      ? "Software payments are still tiny beside DEX volume."
+      : "Software payments now equal a visible share of DEX volume.";
   }
   if (id === "x402-top-server-share") {
     return value > 0.5 ? "One server drives much of the count." : "Several services contribute to the count.";
@@ -195,7 +197,7 @@ function ratioRead(id, value) {
 function correlationRead(value) {
   if (value >= 0.6) return "Counts and value are moving together.";
   if (value <= 0) return "Counts and value are diverging.";
-  return "Only weak count-value confirmation.";
+  return "Counts and value have only a weak link.";
 }
 
 function LoadingState() {
@@ -313,8 +315,8 @@ export default function Dashboard() {
           OES <span>/</span> RADAR
         </a>
         <nav aria-label="Dashboard sections">
-          <a href="#machine">Machine</a>
-          <a href="#rails">Rails</a>
+          <a href="#machine">Payments</a>
+          <a href="#rails">Markets</a>
           <a href="#quality">Quality</a>
           <a href="#sources">Sources</a>
           <a
@@ -574,11 +576,24 @@ export default function Dashboard() {
               <div><dt>Sellers</dt><dd>{formatNumber(protocols.x402.sellers30d)}</dd></div>
               <div><dt>Average payment</dt><dd>{formatCurrency(protocols.x402.avgPaymentUsd, true)}</dd></div>
               <div><dt>Transactions / buyer</dt><dd>{formatRatio(protocols.x402.transactionsPerBuyer)}</dd></div>
-              <div><dt>Bazaar resources</dt><dd>{formatNumber(protocols.bazaar.resourceCount)}</dd></div>
+              <div>
+                <dt>
+                  <LabelWithHelp
+                    label="Bazaar resources"
+                    help="Paid HTTP services listed in Coinbase’s public x402 catalog."
+                  />
+                </dt>
+                <dd>{formatNumber(protocols.bazaar.resourceCount)}</dd>
+              </div>
             </dl>
           </article>
           <article className="protocol-card">
-            <div className="protocol-id">MPP / REPORTED TOTAL</div>
+            <div className="protocol-id">
+              <LabelWithHelp
+                label="MPP / REPORTED TOTAL"
+                help="MPPscan exposes an overall total. The trend charts above use its recent payment buckets."
+              />
+            </div>
             <div className="protocol-main">
               <strong>{formatNumber(protocols.mpp.reportedTransactions)}</strong>
               <span>transactions</span>
@@ -590,7 +605,7 @@ export default function Dashboard() {
               <div><dt>Average payment</dt><dd>{formatCurrency(protocols.mpp.avgPaymentUsd, true)}</dd></div>
               <div><dt>Transactions / sender</dt><dd>{formatRatio(protocols.mpp.transactionsPerSender)}</dd></div>
               <div>
-                <dt>Recent value change</dt>
+                <dt>3d value vs prior 3d</dt>
                 <dd className={signedClass(protocols.mpp.recentVolumeChangePct)}>
                   {formatPctPoint(protocols.mpp.recentVolumeChangePct)}
                 </dd>
@@ -604,7 +619,7 @@ export default function Dashboard() {
         <div className="section-heading">
           <div>
             <div className="section-kicker">CHECKS BEHIND THE HEADLINE</div>
-            <h2 id="statistics-title">Direction, value, and time.</h2>
+            <h2 id="statistics-title">Trend checks.</h2>
           </div>
           <p className="section-note note-with-help">
             These checks describe the public data. They do not predict the future.
@@ -626,7 +641,7 @@ export default function Dashboard() {
             note={
               Math.abs(analytics.x402ValueAnomaly.zScore) >= 2
                 ? "The latest seven-day average is unusual beside the prior 21 days."
-                : "The latest seven-day average stays within the short baseline."
+                : "The latest seven-day average is not unusual for this short history."
             }
             help="This uses a z-score. A value near 0 is normal for this short history. A value above +2 or below -2 is unusual."
           />
@@ -788,7 +803,7 @@ export default function Dashboard() {
             title="x402 and MPP packages"
             subtitle="@x402/core and mppx, grouped by week"
             legend={machineLegend}
-            summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core · ${formatNumber(
+            summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core / ${formatNumber(
               developer.mppDownloads28d
             )} mppx. Solid lines show 4w averages. The current UTC week is partial.`}
             help="Developers install these npm packages to build with x402 and MPP. Downloads show interest, but they do not prove live services or paying users."
@@ -857,7 +872,7 @@ export default function Dashboard() {
         <div className="section-heading">
           <div>
             <div className="section-kicker">DATA QUALITY</div>
-            <h2 id="quality-title">How reliable is the signal?</h2>
+            <h2 id="quality-title">Signal reliability.</h2>
           </div>
           <p className="section-note">
             The score falls when one server dominates or public providers disagree.
@@ -984,9 +999,6 @@ export default function Dashboard() {
             <div className="section-kicker">PUBLIC SOURCES</div>
             <h2 id="sources-title">Check the underlying data.</h2>
           </div>
-          <p className="section-note">
-            The dashboard uses public data. Its source code is on GitHub.
-          </p>
         </div>
         <div className="source-grid">
           {snapshot.sourceHealth.map((source) => (
@@ -1006,7 +1018,7 @@ export default function Dashboard() {
               </div>
               <strong>{source.name}</strong>
               <p>{source.definition}</p>
-              <span className="source-link">Open source ↗</span>
+              <span className="source-link">Open page ↗</span>
             </a>
           ))}
         </div>
@@ -1014,8 +1026,8 @@ export default function Dashboard() {
           <div className="methodology-index">01</div>
           <p>
             <strong>A stronger signal</strong>
-            Software payment value rises across more independent users. Stablecoin supply,
-            DEX volume, or package downloads confirm the direction.
+            Software payment value rises across more buyer and seller addresses. Stablecoin
+            supply, DEX volume, or package downloads rise in the same period.
           </p>
           <div className="methodology-index">02</div>
           <p>
