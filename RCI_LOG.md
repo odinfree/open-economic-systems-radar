@@ -163,3 +163,25 @@ Review date: 2026-07-18
   completes, the local worker returns HTTP 200 with schema 1.2.0 and 9/9 healthy
   sources, and browser QA reports no horizontal overflow at 390px, 1280px, or
   1440px.
+
+# Plain-language revision
+
+Review date: 2026-07-18
+
+- Removed rhetorical questions, slogan-like section titles, repeated refresh
+  details, the redundant source note, and abstract labels such as `developer
+  pull` and `open-rail capacity`.
+- Replaced those labels with the measured objects: software payment value,
+  stablecoin supply, DEX volume, package downloads, addresses, and provider
+  totals.
+- Added 26 small explanation controls for technical statistics, score logic,
+  source periods, and evidence limits. Every control has a unique accessible
+  target, opens on click or keyboard focus, and closes with Escape.
+- Tightened factual boundaries: buyer and seller figures are addresses, the MPP
+  card is an overall reported total, its recent comparison is 3 days versus the
+  prior 3 days, and the Base study is not applied to current explorer totals.
+- Added wording regression tests for the page, metric labels, source
+  descriptions, and metadata.
+- Verification: 13/13 tests pass; the packaged worker returns HTTP 200 with
+  schema 1.3.0, 9/9 healthy sources, six ratios with stable IDs, and zero source
+  failures. Desktop browser QA found no horizontal overflow or runtime errors.
