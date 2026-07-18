@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   Area,
   CartesianGrid,
@@ -40,6 +41,20 @@ export default function TrendChart({
   ariaLabel
 }) {
   const formatter = valueType === "currency" ? formatCurrency : formatNumber;
+  const chartId = useId().replaceAll(":", "");
+  const spanDays =
+    data?.length > 1
+      ? (new Date(data.at(-1).date).getTime() - new Date(data[0].date).getTime()) /
+        86_400_000
+      : 0;
+  const dateFormatter = (value) =>
+    spanDays >= 300
+      ? new Date(`${value}T00:00:00Z`).toLocaleDateString("en-US", {
+          month: "short",
+          year: "2-digit",
+          timeZone: "UTC"
+        })
+      : value.slice(5);
   return (
     <div className="chart-wrap" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height={height}>
@@ -48,7 +63,7 @@ export default function TrendChart({
             {lines.map((line) => (
               <linearGradient
                 key={line.key}
-                id={`gradient-${line.key}`}
+                id={`${chartId}-gradient-${line.key}`}
                 x1="0"
                 y1="0"
                 x2="0"
@@ -66,7 +81,7 @@ export default function TrendChart({
             tickLine={false}
             minTickGap={34}
             tick={{ fill: "var(--muted)", fontSize: 11, fontFamily: "var(--mono)" }}
-            tickFormatter={(value) => value.slice(5)}
+            tickFormatter={dateFormatter}
           />
           <YAxis
             axisLine={false}
@@ -87,8 +102,10 @@ export default function TrendChart({
                 dataKey={line.key}
                 name={line.name}
                 stroke={line.color}
-                fill={`url(#gradient-${line.key})`}
-                strokeWidth={2}
+                fill={`url(#${chartId}-gradient-${line.key})`}
+                strokeWidth={line.strokeWidth || 2}
+                strokeDasharray={line.dash}
+                opacity={line.opacity ?? 1}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 isAnimationActive={false}
@@ -100,7 +117,9 @@ export default function TrendChart({
                 dataKey={line.key}
                 name={line.name}
                 stroke={line.color}
-                strokeWidth={2}
+                strokeWidth={line.strokeWidth || 2}
+                strokeDasharray={line.dash}
+                opacity={line.opacity ?? 1}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 isAnimationActive={false}

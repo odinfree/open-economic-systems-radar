@@ -12,7 +12,7 @@ import {
   signedClass
 } from "@/lib/format";
 
-const RANGE_DAYS = { "7D": 7, "30D": 30, "90D": 90, "1Y": 365 };
+const RANGE_DAYS = { "90D": 90, "1Y": 365, "18M": 548 };
 
 function filterRange(rows, days) {
   if (!rows?.length) return [];
@@ -71,18 +71,21 @@ function ChartCard({ kicker, title, subtitle, legend, children, summary }) {
 
 function RangeSwitch({ value, onChange }) {
   return (
-    <div className="range-switch" aria-label="Chart date range">
-      {Object.keys(RANGE_DAYS).map((range) => (
-        <button
-          type="button"
-          key={range}
-          className={range === value ? "active" : ""}
-          aria-pressed={range === value}
-          onClick={() => onChange(range)}
-        >
-          {range}
-        </button>
-      ))}
+    <div className="range-control">
+      <span>HISTORY</span>
+      <div className="range-switch" aria-label="Chart date range">
+        {Object.keys(RANGE_DAYS).map((range) => (
+          <button
+            type="button"
+            key={range}
+            className={range === value ? "active" : ""}
+            aria-pressed={range === value}
+            onClick={() => onChange(range)}
+          >
+            {range}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -159,7 +162,7 @@ export default function Dashboard() {
   const [snapshot, setSnapshot] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [range, setRange] = useState("90D");
+  const [range, setRange] = useState("1Y");
   const [slot, setSlot] = useState(() => Math.floor(Date.now() / 21_600_000));
 
   const load = useCallback(async (manual = false) => {
@@ -196,7 +199,7 @@ export default function Dashboard() {
     if (!snapshot) return {};
     const days = RANGE_DAYS[range];
     return {
-      machine: filterRange(snapshot.series.machineDaily, days),
+      machine: snapshot.series.machineDaily,
       stablecoins: filterRange(snapshot.series.stablecoinSupply, days),
       dex: filterRange(snapshot.series.dexDaily, days),
       npm: filterRange(snapshot.series.npmWeekly, days)
@@ -228,13 +231,23 @@ export default function Dashboard() {
     },
     x402CountValueCorrelation: 0,
     machineValuePerThousandPayments: 0,
-    mppMachineValueShare: 0
+    mppMachineValueShare: 0,
+    stablecoinSupplyGrowth90dPct: 0,
+    stablecoinSupplyGrowth1yPct: 0,
+    dexVolume90dChangePct: 0,
+    dexVolume1yChangePct: 0
+  };
+  const coverage = snapshot.coverage || {
+    machine: { days: snapshot.series.machineDaily.length, start: null, end: null },
+    stablecoins: { days: snapshot.series.stablecoinSupply.length, start: null, end: null },
+    dex: { days: snapshot.series.dexDaily.length, start: null, end: null },
+    npm: { days: snapshot.series.npmWeekly.length * 7, start: null, end: null }
   };
   const healthPct = (snapshot.meta.healthySourceCount / snapshot.meta.sourceCount) * 100;
   const authentic = quality.authenticityBenchmark;
   const machineLegend = [
     { name: "x402", color: "var(--signal)" },
-    { name: "MPP", color: "var(--acid)" }
+    { name: "MPP", color: "var(--text)" }
   ];
 
   return (
@@ -248,6 +261,13 @@ export default function Dashboard() {
           <a href="#rails">Rails</a>
           <a href="#quality">Quality</a>
           <a href="#sources">Sources</a>
+          <a
+            href="https://github.com/welttowelt/open-economic-systems-radar"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub ↗
+          </a>
         </nav>
         <button
           type="button"
@@ -264,11 +284,10 @@ export default function Dashboard() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <div className="section-kicker">OPEN ECONOMIC SYSTEMS / EARLY-WARNING INSTRUMENT</div>
-          <h1>Is software beginning to transact outside closed platforms?</h1>
+          <h1>Is software entering the open economy?</h1>
           <p className="hero-deck">
-            A public read across four six-hour UTC windows on economic activity,
-            counterparty breadth, programmable settlement, developer pull, concentration,
-            and authenticity.
+            Four daily reads on machine payments, open settlement, developer pull,
+            counterparty breadth, concentration, and authentic economic use.
           </p>
           <div className="freshness-line">
             <span className={`status-dot ${snapshot.meta.status}`} />
@@ -329,7 +348,9 @@ export default function Dashboard() {
             <div className="section-kicker">PRIMARY INDICATORS</div>
             <h2 id="primary-indicators">Scale only counts when behavior follows.</h2>
           </div>
-          <RangeSwitch value={range} onChange={setRange} />
+          <p className="section-note">
+            Fixed windows make each headline comparable across every refresh.
+          </p>
         </div>
         <div className="metrics-grid">
           <MetricCard
@@ -380,7 +401,11 @@ export default function Dashboard() {
             <div className="section-kicker">MACHINE COMMERCE</div>
             <h2 id="machine-title">Payment traffic, value, and breadth.</h2>
           </div>
-          <p className="section-note">Rolling public explorer observations; windows are labelled.</p>
+          <p className="section-note">
+            Full public explorer history: {coverage.machine.days} days
+            {coverage.machine.start ? ` from ${coverage.machine.start}` : ""}. Seven-day
+            averages expose direction without pretending a longer series exists.
+          </p>
         </div>
         <div className="chart-grid">
           <ChartCard
@@ -388,14 +413,41 @@ export default function Dashboard() {
             title="Machine-payment value"
             subtitle="x402 and MPP, USD"
             legend={machineLegend}
-            summary={`Latest 7d: ${formatCurrency(headline.machineVolume7d)} combined.`}
+            summary={`Latest 7d: ${formatCurrency(
+              headline.machineVolume7d
+            )} combined · solid lines are 7d averages.`}
           >
             <TrendChart
               data={ranged.machine}
               valueType="currency"
               lines={[
-                { key: "x402VolumeUsd", name: "x402", color: "var(--signal)" },
-                { key: "mppVolumeUsd", name: "MPP", color: "var(--acid)", area: false }
+                {
+                  key: "x402VolumeUsd",
+                  name: "x402 daily",
+                  color: "var(--signal)",
+                  opacity: 0.22
+                },
+                {
+                  key: "x402VolumeUsdMa7",
+                  name: "x402 7d mean",
+                  color: "var(--signal)",
+                  area: false,
+                  strokeWidth: 2.5
+                },
+                {
+                  key: "mppVolumeUsd",
+                  name: "MPP daily",
+                  color: "var(--body)",
+                  area: false,
+                  opacity: 0.22
+                },
+                {
+                  key: "mppVolumeUsdMa7",
+                  name: "MPP 7d mean",
+                  color: "var(--text)",
+                  area: false,
+                  strokeWidth: 2.5
+                }
               ]}
               ariaLabel="Daily x402 and MPP payment value"
             />
@@ -410,8 +462,33 @@ export default function Dashboard() {
             <TrendChart
               data={ranged.machine}
               lines={[
-                { key: "x402Transactions", name: "x402", color: "var(--signal)" },
-                { key: "mppTransactions", name: "MPP", color: "var(--acid)", area: false }
+                {
+                  key: "x402Transactions",
+                  name: "x402 daily",
+                  color: "var(--signal)",
+                  opacity: 0.22
+                },
+                {
+                  key: "x402TransactionsMa7",
+                  name: "x402 7d mean",
+                  color: "var(--signal)",
+                  area: false,
+                  strokeWidth: 2.5
+                },
+                {
+                  key: "mppTransactions",
+                  name: "MPP daily",
+                  color: "var(--body)",
+                  area: false,
+                  opacity: 0.22
+                },
+                {
+                  key: "mppTransactionsMa7",
+                  name: "MPP 7d mean",
+                  color: "var(--text)",
+                  area: false,
+                  strokeWidth: 2.5
+                }
               ]}
               ariaLabel="Daily x402 and MPP payment transactions"
             />
@@ -495,6 +572,35 @@ export default function Dashboard() {
             <strong>{formatPercent(analytics.mppMachineValueShare, 2)}</strong>
             <p>Protocol diversity check; one protocol should not define the entire signal.</p>
           </article>
+          <article className="analytic-card long-horizon">
+            <span>STABLECOIN CAPACITY / 1Y</span>
+            <strong className={signedClass(analytics.stablecoinSupplyGrowth1yPct)}>
+              {formatPctPoint(analytics.stablecoinSupplyGrowth1yPct)}
+            </strong>
+            <p>Structural change in open settlement capacity across a full year.</p>
+          </article>
+          <article className="analytic-card long-horizon">
+            <span>STABLECOIN CAPACITY / 90D</span>
+            <strong className={signedClass(analytics.stablecoinSupplyGrowth90dPct)}>
+              {formatPctPoint(analytics.stablecoinSupplyGrowth90dPct)}
+            </strong>
+            <p>A medium-horizon check on whether the annual direction is still active.</p>
+          </article>
+          <article className="analytic-card long-horizon">
+            <span>DEX FLOW / 90D VS PRIOR 90D</span>
+            <strong className={signedClass(analytics.dexVolume90dChangePct)}>
+              {formatPctPoint(analytics.dexVolume90dChangePct)}
+            </strong>
+            <p>Open-market activity compared across two full quarters.</p>
+          </article>
+          <article className="analytic-card long-horizon">
+            <span>PUBLIC MACHINE HISTORY</span>
+            <strong>{coverage.machine.days}D</strong>
+            <p>
+              A hard coverage limit. The radar will build its own longitudinal record from
+              here.
+            </p>
+          </article>
         </div>
       </section>
 
@@ -504,7 +610,13 @@ export default function Dashboard() {
             <div className="section-kicker">RAILS + OPEN MARKETS</div>
             <h2 id="rails-title">Capacity, turnover, and route breadth.</h2>
           </div>
-          <p className="section-note">These indicators confirm the environment, not agent adoption by themselves.</p>
+          <div className="section-actions">
+            <p className="section-note">
+              Default: one year. Use 90D for the medium view or 18M for the longest
+              comparable public window.
+            </p>
+            <RangeSwitch value={range} onChange={setRange} />
+          </div>
         </div>
         <div className="chart-grid">
           <ChartCard
@@ -513,12 +625,28 @@ export default function Dashboard() {
             subtitle={`${rails.chainsOver1b} chains above $1B · USDT ${formatPercent(
               rails.usdtShare
             )} · USDC ${formatPercent(rails.usdcShare)}`}
-            summary={`Thirty-day supply change: ${formatPctPoint(rails.supplyGrowth.d30)}.`}
+            summary={`One-year change: ${formatPctPoint(
+              analytics.stablecoinSupplyGrowth1yPct
+            )} · orange line is the 30d mean.`}
           >
             <TrendChart
               data={ranged.stablecoins}
               valueType="currency"
-              lines={[{ key: "supplyUsd", name: "Stablecoin supply", color: "var(--blue)" }]}
+              lines={[
+                {
+                  key: "supplyUsd",
+                  name: "Daily supply",
+                  color: "var(--body)",
+                  opacity: 0.22
+                },
+                {
+                  key: "supplyUsdMa30",
+                  name: "30d mean",
+                  color: "var(--signal)",
+                  area: false,
+                  strokeWidth: 2.5
+                }
+              ]}
               ariaLabel="Global stablecoin circulating supply"
             />
           </ChartCard>
@@ -526,12 +654,28 @@ export default function Dashboard() {
             kicker="OPEN-MARKET FLOW"
             title="Daily DEX volume"
             subtitle={`${formatNumber(rails.dexProtocols)} protocols in source coverage`}
-            summary={`Thirty-day turnover equals ${formatRatio(rails.dexTurnover30d)} of stablecoin supply.`}
+            summary={`90d versus prior 90d: ${formatPctPoint(
+              analytics.dexVolume90dChangePct
+            )} · orange line is the 30d mean.`}
           >
             <TrendChart
               data={ranged.dex}
               valueType="currency"
-              lines={[{ key: "volumeUsd", name: "DEX volume", color: "var(--violet)" }]}
+              lines={[
+                {
+                  key: "volumeUsd",
+                  name: "Daily volume",
+                  color: "var(--body)",
+                  opacity: 0.22
+                },
+                {
+                  key: "volumeUsdMa30",
+                  name: "30d mean",
+                  color: "var(--signal)",
+                  area: false,
+                  strokeWidth: 2.5
+                }
+              ]}
               ariaLabel="Daily decentralized exchange volume"
             />
           </ChartCard>
@@ -544,41 +688,72 @@ export default function Dashboard() {
             <div className="section-kicker">DEVELOPER PULL</div>
             <h2 id="developer-title">SDK demand before production evidence.</h2>
           </div>
-          <p className="section-note">npm downloads include CI, mirrors, and repeat installs.</p>
+          <div className="section-actions">
+            <p className="section-note">
+              npm downloads include CI, mirrors, and repeat installs. The same 90D, 1Y,
+              and 18M horizon applies.
+            </p>
+            <RangeSwitch value={range} onChange={setRange} />
+          </div>
         </div>
         <div className="developer-layout">
           <ChartCard
             kicker="WEEKLY DOWNLOADS"
             title="Canonical machine-payment packages"
-            subtitle="@x402/core and mppx"
+            subtitle="@x402/core and mppx · daily data aggregated weekly"
             legend={machineLegend}
             summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core · ${formatNumber(
               developer.mppDownloads28d
-            )} mppx. The current UTC week is partial.`}
+            )} mppx · solid lines are 4w averages. The current UTC week is partial.`}
           >
             <TrendChart
               data={ranged.npm}
               lines={[
-                { key: "x402", name: "@x402/core", color: "var(--signal)" },
-                { key: "mpp", name: "mppx", color: "var(--acid)", area: false }
+                {
+                  key: "x402",
+                  name: "@x402/core weekly",
+                  color: "var(--signal)",
+                  opacity: 0.2
+                },
+                {
+                  key: "x402Ma4",
+                  name: "@x402/core 4w mean",
+                  color: "var(--signal)",
+                  area: false,
+                  strokeWidth: 2.5
+                },
+                {
+                  key: "mpp",
+                  name: "mppx weekly",
+                  color: "var(--body)",
+                  area: false,
+                  opacity: 0.2
+                },
+                {
+                  key: "mppMa4",
+                  name: "mppx 4w mean",
+                  color: "var(--text)",
+                  area: false,
+                  strokeWidth: 2.5
+                }
               ]}
               ariaLabel="Weekly npm downloads for x402 core and mppx"
             />
           </ChartCard>
           <div className="momentum-stack">
             <article>
-              <span>@x402/core / 4W MOMENTUM</span>
-              <strong className={signedClass(developer.x402GrowthPct)}>
-                {formatPctPoint(developer.x402GrowthPct)}
+              <span>@x402/core / 13W VS PRIOR 13W</span>
+              <strong className={signedClass(developer.x402Growth13wPct)}>
+                {formatPctPoint(developer.x402Growth13wPct)}
               </strong>
-              <Bar value={50 + developer.x402GrowthPct / 2} />
+              <Bar value={50 + developer.x402Growth13wPct / 2} />
             </article>
             <article>
-              <span>mppx / 4W MOMENTUM</span>
-              <strong className={signedClass(developer.mppGrowthPct)}>
-                {formatPctPoint(developer.mppGrowthPct)}
+              <span>mppx / 13W VS PRIOR 13W</span>
+              <strong className={signedClass(developer.mppGrowth13wPct)}>
+                {formatPctPoint(developer.mppGrowth13wPct)}
               </strong>
-              <Bar value={50 + developer.mppGrowthPct / 2} color="var(--acid)" />
+              <Bar value={50 + developer.mppGrowth13wPct / 2} color="var(--text)" />
             </article>
             <article className="proxy-warning">
               <span>INTERPRETATION</span>
@@ -696,7 +871,10 @@ export default function Dashboard() {
             <div className="section-kicker">SOURCES + DEFINITIONS</div>
             <h2 id="sources-title">Every headline should lead back to evidence.</h2>
           </div>
-          <p className="section-note">No wallet keys, paid API credentials, or internal product data.</p>
+          <p className="section-note">
+            No wallet keys, paid API credentials, or internal product data. Public source
+            code lives under welttowelt on GitHub.
+          </p>
         </div>
         <div className="source-grid">
           {snapshot.sourceHealth.map((source) => (
@@ -740,6 +918,13 @@ export default function Dashboard() {
       <footer>
         <div className="radar-mark">OES <span>/</span> RADAR</div>
         <p>Open Economic Systems Radar · methodology v{snapshot.meta.methodologyVersion}</p>
+        <a
+          href="https://github.com/welttowelt/open-economic-systems-radar"
+          target="_blank"
+          rel="noreferrer"
+        >
+          welttowelt / source ↗
+        </a>
         <p>Refresh windows: {snapshot.meta.refreshWindowsUtc.join(" · ")} UTC</p>
       </footer>
     </main>

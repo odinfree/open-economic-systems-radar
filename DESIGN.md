@@ -13,10 +13,13 @@ in machine-native commerce before it becomes obvious.
 
 ## Visual direction
 
-An industrial observatory: dark graphite, warm paper text, signal orange, and
-acid green. Newsreader carries the editorial voice; IBM Plex Mono carries
-measurements. Dense but calm, with thin rules, large figures, and instrument
-labels rather than generic SaaS cards.
+Follow the
+[welttowelt brand reference](https://welttowelt-brand-sample-v18093.netlify.app/):
+a deep-violet field (`#0C0A18`), controlled violet surfaces, signal white,
+mist-grey body text, and one ember-orange accent (`#E86A2D`). IBM Plex Sans
+carries the interface; IBM Plex Mono is reserved for measurements. Use strict
+grid logic, square panels, generous whitespace, left-led hierarchy, and fewer,
+larger visual moves.
 
 ## Information hierarchy
 
@@ -30,7 +33,10 @@ labels rather than generic SaaS cards.
 
 ## Interaction
 
-- Range controls update every eligible line chart.
+- Eligible history charts default to one year and offer 90D, 1Y, and 18M views.
+- Machine-payment charts show their complete explorer window because no honest
+  medium- or long-term public series exists yet.
+- 30-day and four-week moving averages expose direction in noisy daily data.
 - Metric definitions are visible without requiring a hidden help center.
 - Source links open the underlying public source.
 - Refresh requests use the current six-hour UTC window.

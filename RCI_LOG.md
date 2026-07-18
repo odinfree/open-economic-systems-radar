@@ -91,3 +91,75 @@ defined` exception because it contained the adapter's unbundled entrypoint. The
 final build adds Wrangler's bundling pass before packaging and was separately
 tested with bundling disabled at runtime; the page, icon, and live snapshot API
 all returned HTTP 200 in that final package form.
+
+# Five-cycle RCI record — brand and horizon revision
+
+Review date: 2026-07-18
+
+## RCI 1 — Historical data truth
+
+- Problem: the earlier global 7D/30D/90D/1Y selector implied that every source
+  could support every horizon.
+- Evidence: machine explorers expose 31 days, while stablecoin and DEX sources
+  expose longer histories and the npm endpoint clamps large requests to roughly
+  18 months.
+- Consequence: a selected one-year window could still show only one month
+  without stating why.
+- Smallest fix: give machine charts their full source window and a visible
+  coverage statement; use 90D, 1Y, and 18M only for eligible history charts.
+- Verification: the production snapshot reports 31 machine days, 548
+  stablecoin days, 548 DEX days, and 547 npm coverage days.
+
+## RCI 2 — Trend legibility
+
+- Problem: raw daily series hid medium- and long-horizon direction in noise.
+- Evidence: DEX volume and package downloads are highly variable; month-only
+  charts emphasized spikes.
+- Consequence: readers could react to a transient peak instead of a sustained
+  change.
+- Smallest fix: default to 1Y, add 30-day means to stablecoin and DEX charts,
+  four-week means to npm, and seven-day means to the short machine series.
+- Verification: the 18M browser interaction updates both eligible chart groups,
+  and long x-axes show month plus year.
+
+## RCI 3 — Brand fidelity
+
+- Problem: the earlier interface mixed graphite, serif type, green, blue, and
+  violet signals, while the supplied reference uses a deep-violet field and one
+  orange signal.
+- Evidence: the old design contract and favicon still named or encoded the
+  previous palette.
+- Consequence: the dashboard did not read as part of the supplied welttowelt
+  design system.
+- Smallest fix: adopt the exact reference palette, IBM Plex Sans, square
+  surfaces, left-led hierarchy, restrained orange, and update the favicon and
+  design contract.
+- Verification: computed production styles match `#0C0A18`, `#E86A2D`,
+  `#151225`, `#2A2640`, IBM Plex Sans, and zero-radius chart panels.
+
+## RCI 4 — Responsive and accessible behavior
+
+- Problem: the redesigned verdict panel initially lost useful inner spacing at
+  the phone breakpoint.
+- Evidence: the mobile rule used horizontal padding of zero.
+- Consequence: the orange structure line and score visualization sat too close
+  to the viewport edge.
+- Smallest fix: restore 20px panel padding, stack section actions on mobile,
+  preserve visible focus, and keep charts labelled with adjacent text summaries.
+- Verification: the 390 × 844 production pass has a 390px scroll width, hidden
+  desktop navigation, one-column metric layout, and zero console errors.
+
+## RCI 5 — Public source and deployment truth
+
+- Problem: the live site existed before a public `welttowelt` source repository,
+  and the documentation still described the previous design.
+- Evidence: Git only had the private hosting remote; the README did not link a
+  public source of record.
+- Consequence: readers could not audit or reuse the implementation from the
+  requested GitHub account.
+- Smallest fix: create the public GitHub repository, link it in the header,
+  sources section, footer, and README, then deploy the identical tested commit.
+- Verification: 11/11 tests pass, the Cloudflare OpenNext production build
+  completes, the local worker returns HTTP 200 with schema 1.2.0 and 9/9 healthy
+  sources, and browser QA reports no horizontal overflow at 390px, 1280px, or
+  1440px.
