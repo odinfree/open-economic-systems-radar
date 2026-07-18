@@ -39,6 +39,13 @@ npm test
 npm run build
 ```
 
+`npm run build` produces both the Next.js build and a Cloudflare OpenNext worker
+package in `dist/`. Test the worker runtime with:
+
+```bash
+npm run preview:worker
+```
+
 ## Refresh contract
 
 Public source requests are cached for 21,600 seconds. The first dashboard request

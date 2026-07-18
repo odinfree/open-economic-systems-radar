@@ -79,3 +79,9 @@ The public DEX overview response is slightly above Next.js's 2MB individual
 fetch-cache limit. The final normalized dashboard snapshot is 79.9KB and the API
 route itself carries a six-hour shared-cache contract, so the oversized upstream
 response does not expand the browser payload.
+
+The first hosting attempt compiled the Next.js application but failed at the
+packaging boundary because no `dist` worker artifact existed. The source now
+builds a supported Cloudflare OpenNext worker package. Local worker-runtime
+verification returned HTTP 200 for the page, icon, and snapshot API, with 9/9
+sources healthy and the six-hour cache headers intact.
