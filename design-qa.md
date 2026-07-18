@@ -1,0 +1,37 @@
+# Design QA — brand and long-horizon revision
+
+Reference: https://welttowelt-brand-sample-v18093.netlify.app/
+
+Review date: 2026-07-18
+
+| Surface | Viewport | Check | Result |
+| --- | ---: | --- | --- |
+| Brand reference | 1280 × 720 | Palette, type, grid, hierarchy, panel shape | Captured and compared |
+| Dashboard | 1280 × 720 | Same visual language and information hierarchy | Passed |
+| Brand reference | 390 × 844 | Mobile type scale and left-led rhythm | Captured and compared |
+| Dashboard | 390 × 844 | Responsive header, hero, verdict, and no horizontal overflow | Passed |
+| Dashboard | 1440 × 1000 | Wide composition and three-column metric grid | Passed |
+
+## Brand fidelity
+
+- Exact foundation and signal colors: `#0C0A18` and `#E86A2D`.
+- Supporting surfaces and text use the reference palette: `#13102A`,
+  `#151225`, `#1E1A30`, `#2A2640`, `#FFFFFF`, `#B0ACC0`, and `#7A7490`.
+- IBM Plex Sans carries the interface; IBM Plex Mono is limited to data and
+  instrumentation.
+- Panels are square, the layout is left-led, and orange is reserved for the
+  primary signal and a small number of structural accents.
+- No secondary green, blue, or violet signal colors remain.
+
+## Horizon and behavior checks
+
+- Eligible charts default to 1Y and switch between 90D, 1Y, and 18M.
+- The 18M interaction updates both rails and developer views and exposes
+  year-aware x-axis labels.
+- Stablecoin and DEX charts use 30-day moving averages.
+- npm charts use four-week moving averages and 13-week comparisons.
+- Machine-payment charts show the full 31-day explorer window and state that
+  coverage limit beside the charts.
+- The production browser reported zero console errors or warnings.
+
+Final result: passed.

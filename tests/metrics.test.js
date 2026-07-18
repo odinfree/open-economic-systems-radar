@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  addMovingAverage,
   aggregateDaily,
   buildMetrics,
   pearsonCorrelation,
   pctChange,
   safeDivide,
   scaleScore,
+  seriesCoverage,
+  trailingWindowChange,
   windowShiftZ
 } from "../lib/metrics";
 import { formatCurrency } from "../lib/format";
@@ -50,6 +53,24 @@ describe("metric model", () => {
     expect(anomaly.observations).toBe(28);
     expect(anomaly.zScore).toBeGreaterThan(2);
     expect(pearsonCorrelation(rows, "transactions", "volumeUsd")).toBeCloseTo(1);
+  });
+
+  it("builds honest mid- and long-horizon helpers", () => {
+    const rows = days(6).map((date, index) => ({ date, value: index + 1 }));
+    const smoothed = addMovingAverage(rows, "value", "mean3", 3);
+    expect(smoothed.at(-1).mean3).toBe(5);
+    expect(trailingWindowChange(rows, "value", 3)).toMatchObject({
+      current: 15,
+      previous: 6,
+      changePct: 150,
+      complete: true
+    });
+    expect(seriesCoverage(rows)).toEqual({
+      start: rows[0].date,
+      end: rows.at(-1).date,
+      days: 6,
+      points: 6
+    });
   });
 
   it("degrades to a zeroed snapshot when every feed is unavailable", () => {
@@ -136,6 +157,12 @@ describe("metric model", () => {
     expect(output.quality.top1TxShare).toBeCloseTo(0.7);
     expect(output.ratios).toHaveLength(6);
     expect(output.series.npmWeekly.length).toBeGreaterThan(5);
+    expect(output.coverage.machine.days).toBe(30);
+    expect(output.series.stablecoinSupply.at(-1)).toHaveProperty("supplyUsdMa30");
+    expect(output.series.dexDaily.at(-1)).toHaveProperty("volumeUsdMa30");
+    expect(output.series.npmWeekly.at(-1)).toHaveProperty("x402Ma4");
+    expect(output.rails.supplyGrowth).toHaveProperty("d365");
+    expect(output.developer).toHaveProperty("x402Growth13wPct");
     expect(output.analytics.x402CountValueCorrelation).toBeGreaterThanOrEqual(-1);
     expect(output.analytics.x402CountValueCorrelation).toBeLessThanOrEqual(1);
     expect(output.components.find((component) => component.id === "breadth")?.score).toBeLessThanOrEqual(

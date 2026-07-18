@@ -10,7 +10,11 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
 - merchant and payer breadth;
 - concentration and provider disagreement;
 - authenticity research;
-- short-baseline anomaly, count-value correlation, value density, and protocol-diversity diagnostics.
+- short-baseline anomaly, count-value correlation, value density, and protocol-diversity diagnostics;
+- 90-day, one-year, and 18-month trend views with explicit source-coverage limits.
+
+The public source of record is
+[welttowelt/open-economic-systems-radar](https://github.com/welttowelt/open-economic-systems-radar).
 
 ## Sources
 
@@ -53,6 +57,11 @@ inside each UTC six-hour window produces or retrieves that window's snapshot.
 The dashboard exposes `generatedAt`, source health, and the next refresh window.
 This is demand-triggered revalidation, not a claim that a background cron ran
 when nobody requested the dashboard.
+
+Rails, DEX, and developer charts default to one year and can switch between
+90 days, one year, and 18 months. Machine-payment explorers currently expose a
+much shorter history, so those charts show the full available source window and
+print its exact coverage instead of stretching it into a false long-term series.
 
 No private keys, wallet addresses, internal product data, or paid API keys are
 required.
