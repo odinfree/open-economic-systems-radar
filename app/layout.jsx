@@ -6,11 +6,11 @@ import "@/app/globals.css";
 export const metadata = {
   title: "Open Economic Systems Radar",
   description:
-    "A public dashboard with four UTC refresh windows per day, tracking machine payments, stablecoin rails, open-market activity, developer pull, concentration, and authenticity.",
+    "A public dashboard tracking software payments, stablecoin supply, open trading, developer interest, concentration, and independent use.",
   openGraph: {
     title: "Open Economic Systems Radar",
     description:
-      "Detecting an early shift toward open, programmable economic activity.",
+      "Track software paying through open economic systems.",
     type: "website"
   }
 };

@@ -60,6 +60,92 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+.label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.info-tip {
+  position: relative;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+.info-tip button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--separator);
+  border-radius: 50%;
+  font: inherit;
+  cursor: help;
+}
+
+.info-tip button:hover,
+.info-tip button[aria-expanded="true"] {
+  color: var(--paper);
+  border-color: var(--signal);
+  background: var(--inset);
+}
+
+.info-popover {
+  width: min(270px, calc(100vw - 48px));
+  display: none;
+  position: absolute;
+  top: calc(100% + 9px);
+  left: -12px;
+  z-index: 80;
+  padding: 12px 13px;
+  color: var(--body);
+  background: var(--canvas);
+  border: 1px solid var(--separator);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.45);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 450;
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-align: left;
+  text-transform: none;
+}
+
+.info-tip:hover .info-popover,
+.info-tip:focus-within .info-popover,
+.info-tip.is-open .info-popover {
+  display: block;
+}
+
+.verdict-confidence,
+.matrix-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.verdict-confidence .info-popover,
+.matrix-note .info-popover {
+  right: -12px;
+  left: auto;
+}
+
+.note-with-help .info-tip {
+  margin-left: 6px;
+}
+
 .topbar {
   height: 72px;
   position: sticky;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import TrendChart from "@/components/TrendChart";
 import {
   formatCurrency,
@@ -30,10 +30,54 @@ function Delta({ value, suffix = "" }) {
   );
 }
 
-function MetricCard({ eyebrow, value, note, delta, tone = "default" }) {
+function InfoTip({ label, children }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+
+  return (
+    <span
+      className={`info-tip ${open ? "is-open" : ""}`}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          setOpen(false);
+          event.currentTarget.querySelector("button")?.focus();
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-label={`Explain ${label}`}
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((current) => !current)}
+      >
+        ?
+      </button>
+      <span className="info-popover" id={id} role="tooltip">
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function LabelWithHelp({ label, help }) {
+  return (
+    <span className="label-with-help">
+      <span>{label}</span>
+      {help && <InfoTip label={label}>{help}</InfoTip>}
+    </span>
+  );
+}
+
+function MetricCard({ eyebrow, value, note, delta, tone = "default", help }) {
   return (
     <article className={`metric-card ${tone}`}>
-      <div className="metric-eyebrow">{eyebrow}</div>
+      <div className="metric-eyebrow">
+        <LabelWithHelp label={eyebrow} help={help} />
+      </div>
       <div className="metric-value">{value}</div>
       <div className="metric-foot">
         <span>{note}</span>
@@ -43,13 +87,15 @@ function MetricCard({ eyebrow, value, note, delta, tone = "default" }) {
   );
 }
 
-function ChartCard({ kicker, title, subtitle, legend, children, summary }) {
+function ChartCard({ kicker, title, subtitle, legend, children, summary, help }) {
   return (
     <article className="chart-card">
       <header className="card-header">
         <div>
           <div className="section-kicker">{kicker}</div>
-          <h3>{title}</h3>
+          <h3>
+            <LabelWithHelp label={title} help={help} />
+          </h3>
           <p>{subtitle}</p>
         </div>
         {legend && (
@@ -65,6 +111,16 @@ function ChartCard({ kicker, title, subtitle, legend, children, summary }) {
       </header>
       {children}
       {summary && <p className="chart-summary">{summary}</p>}
+    </article>
+  );
+}
+
+function AnalyticCard({ label, value, note, help, tone = "" }) {
+  return (
+    <article className={`analytic-card ${tone}`.trim()}>
+      <LabelWithHelp label={label} help={help} />
+      <strong>{value}</strong>
+      <p>{note}</p>
     </article>
   );
 }
@@ -118,22 +174,22 @@ function ratioValue(row) {
   return formatRatio(row.value);
 }
 
-function ratioRead(label, value) {
-  if (label === "Machine value / DEX volume") {
-    return value < 0.001 ? "Machine commerce remains economically tiny." : "Machine value is entering visible onchain scale.";
+function ratioRead(id, value) {
+  if (id === "machine-dex-share") {
+    return value < 0.001 ? "Software payments are still tiny beside DEX volume." : "Software payments now register beside DEX volume.";
   }
-  if (label === "x402 top-server transaction share") {
-    return value > 0.5 ? "High concentration; headline growth may be operator-specific." : "Activity is distributed across several services.";
+  if (id === "x402-top-server-share") {
+    return value > 0.5 ? "One server drives much of the count." : "Several services contribute to the count.";
   }
-  if (label === "x402 provider transaction gap") {
+  if (id === "x402-provider-gap") {
     return value > 1.25 || value < 0.8
-      ? "Coverage definitions disagree; confidence is reduced."
-      : "Providers are broadly aligned.";
+      ? "Provider totals disagree."
+      : "Provider totals are close.";
   }
-  if (label === "DEX turnover / stablecoin supply") {
-    return value > 1 ? "Open-market turnover exceeds current stablecoin capacity each month." : "Settlement capacity is growing faster than turnover.";
+  if (id === "dex-stablecoin-turnover") {
+    return value > 1 ? "Monthly DEX volume exceeds stablecoin supply." : "Stablecoin supply exceeds monthly DEX volume.";
   }
-  return "Track the direction and denominator together.";
+  return "Read the value together with its denominator.";
 }
 
 function correlationRead(value) {
@@ -149,9 +205,9 @@ function LoadingState() {
       <div className="loading-grid">
         <div className="loading-orbit" />
         <div>
-          <div className="section-kicker">CALIBRATING PUBLIC SOURCES</div>
-          <h1>Scanning the edge of the open economy.</h1>
-          <p>x402 · MPP · stablecoins · DEXs · npm · evidence quality</p>
+          <div className="section-kicker">LOADING PUBLIC DATA</div>
+          <h1>Checking the open economy.</h1>
+          <p>x402, MPP, stablecoins, DEXs, npm, and data quality</p>
         </div>
       </div>
     </main>
@@ -212,10 +268,10 @@ export default function Dashboard() {
     return (
       <main className="error-shell">
         <div className="radar-mark">OES / RADAR</div>
-        <h1>Public sources did not answer.</h1>
+        <h1>Public data is unavailable.</h1>
         <p>{error}</p>
         <button type="button" className="signal-button" onClick={() => load(true)}>
-          Retry scan
+          Try again
         </button>
       </main>
     );
@@ -283,26 +339,25 @@ export default function Dashboard() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <div className="section-kicker">OPEN ECONOMIC SYSTEMS / EARLY-WARNING INSTRUMENT</div>
-          <h1>Is software entering the open economy?</h1>
+          <div className="section-kicker">OPEN ECONOMIC SYSTEMS / DAILY RADAR</div>
+          <h1>Track software paying on open networks.</h1>
           <p className="hero-deck">
-            Four daily reads on machine payments, open settlement, developer pull,
-            counterparty breadth, concentration, and authentic economic use.
+            Public data refreshed four times a day. Follow software payments, the money
+            and markets they can use, and signs of independent activity.
           </p>
           <div className="freshness-line">
             <span className={`status-dot ${snapshot.meta.status}`} />
             <span>
-              Snapshot {formatDateTime(snapshot.meta.generatedAt)} · next window{" "}
+              Updated {formatDateTime(snapshot.meta.generatedAt)} / next check{" "}
               {formatDateTime(snapshot.meta.nextRefreshAt)}
             </span>
             <span className="source-health">
               {snapshot.meta.healthySourceCount}/{snapshot.meta.sourceCount} sources healthy
             </span>
           </div>
-          <p className="refresh-contract">{snapshot.meta.note}</p>
           {snapshot.meta.status === "partial" && (
             <div className="partial-alert" role="status">
-              Partial snapshot: {snapshot.failures.map((failure) => failure.id).join(", ")} unavailable.
+              Missing sources: {snapshot.failures.map((failure) => failure.id).join(", ")}.
             </div>
           )}
         </div>
@@ -314,22 +369,29 @@ export default function Dashboard() {
               {verdict.state}
             </div>
             <p>{verdict.summary}</p>
-            <span>Confidence: {verdict.confidence}</span>
+            <span className="verdict-confidence">
+              Confidence: {verdict.confidence}
+              <InfoTip label="confidence">
+                {verdict.confidence === "CONTESTED"
+                  ? "Two public x402 providers report totals that differ enough to lower confidence."
+                  : "The main public sources broadly agree. The market is still young and incomplete."}
+              </InfoTip>
+            </span>
           </div>
         </div>
       </section>
 
       <section className="ticker-strip" aria-label="Current high-signal indicators">
         <div>
-          <span>7D MACHINE VALUE</span>
+          <span>7D SOFTWARE PAYMENTS</span>
           <strong>{formatCurrency(headline.machineVolume7d)}</strong>
         </div>
         <div>
-          <span>7D MACHINE PAYMENTS</span>
+          <span>7D PAYMENT COUNT</span>
           <strong>{formatNumber(headline.machineTransactions7d)}</strong>
         </div>
         <div>
-          <span>STABLECOIN CAPACITY</span>
+          <span>STABLECOIN SUPPLY</span>
           <strong>{formatCurrency(headline.stablecoinSupplyUsd)}</strong>
         </div>
         <div>
@@ -345,52 +407,55 @@ export default function Dashboard() {
       <section className="section-shell" aria-labelledby="primary-indicators">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">PRIMARY INDICATORS</div>
-            <h2 id="primary-indicators">Scale only counts when behavior follows.</h2>
+            <div className="section-kicker">CURRENT LEVELS</div>
+            <h2 id="primary-indicators">What the data shows now.</h2>
           </div>
-          <p className="section-note">
-            Fixed windows make each headline comparable across every refresh.
-          </p>
         </div>
         <div className="metrics-grid">
           <MetricCard
-            eyebrow="MACHINE SETTLEMENT / 7D"
+            eyebrow="SOFTWARE PAYMENT VALUE / 7D"
             value={formatCurrency(headline.machineVolume7d)}
-            note="x402 + MPP public explorers"
+            note="x402 and MPP explorers"
             delta={protocols.x402.volumeChange7dPct}
             tone="signal"
+            help="The dollar value recorded by the public x402 and MPP explorers during the last seven days."
           />
           <MetricCard
-            eyebrow="MACHINE PAYMENTS / 7D"
+            eyebrow="SOFTWARE PAYMENT COUNT / 7D"
             value={formatNumber(headline.machineTransactions7d)}
-            note="count receives concentration penalty"
+            note="x402 and MPP explorer records"
             delta={protocols.x402.txChange7dPct}
+            help="The number of explorer records. One server can create many records, so the score reduces their weight when activity is concentrated."
           />
           <MetricCard
-            eyebrow="OBSERVED X402 BUYERS / 30D"
+            eyebrow="X402 BUYER ADDRESSES / 30D"
             value={formatNumber(headline.x402Buyers30d)}
-            note="addresses, not verified operators"
+            note="public addresses"
+            help="These are blockchain addresses seen paying through x402. One person or company can control several addresses."
           />
           <MetricCard
-            eyebrow="OPEN-RAIL CAPACITY"
+            eyebrow="STABLECOIN SUPPLY"
             value={formatCurrency(headline.stablecoinSupplyUsd)}
-            note="stablecoin circulating supply"
+            note="global circulating supply"
             delta={rails.supplyGrowth.d30}
+            help="The dollar value of stablecoins in circulation. It shows available settlement capacity, not software spending."
           />
           <MetricCard
-            eyebrow="OPEN-MARKET ACTIVITY / 30D"
+            eyebrow="DEX VOLUME / 30D"
             value={formatCurrency(headline.dexVolume30dUsd)}
-            note="DEX volume, not agent commerce"
+            note="all covered DEX trading"
             delta={rails.dexChange30dPct}
+            help="Trading volume on decentralized exchanges. It shows open-market use, but it is not a measure of software payments."
           />
           <MetricCard
-            eyebrow="NAMEABLE INDEPENDENT VALUE"
+            eyebrow="INDEPENDENT X402 VALUE / BASE STUDY"
             value={`${formatPercent(authentic.independentValueFloorShare, 2)}–${formatPercent(
               authentic.independentValueCeilingShare,
               1
             )}`}
-            note="research bound for Base x402, 280d"
+            note="share of value in a 280-day study"
             tone="warning"
+            help="Researchers estimated the share of Base x402 value linked to named, independent services. This is a historical range, not a discount applied to today’s explorer totals."
           />
         </div>
       </section>
@@ -398,24 +463,24 @@ export default function Dashboard() {
       <section className="section-shell" id="machine" aria-labelledby="machine-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">MACHINE COMMERCE</div>
-            <h2 id="machine-title">Payment traffic, value, and breadth.</h2>
+            <div className="section-kicker">SOFTWARE PAYMENTS</div>
+            <h2 id="machine-title">Payment value and count.</h2>
           </div>
           <p className="section-note">
-            Full public explorer history: {coverage.machine.days} days
-            {coverage.machine.start ? ` from ${coverage.machine.start}` : ""}. Seven-day
-            averages expose direction without pretending a longer series exists.
+            Explorer history starts {coverage.machine.start || "with the first available day"}.
+            The lines show a seven-day average across {coverage.machine.days} days.
           </p>
         </div>
         <div className="chart-grid">
           <ChartCard
             kicker="DAILY VALUE"
-            title="Machine-payment value"
+            title="Software payment value"
             subtitle="x402 and MPP, USD"
             legend={machineLegend}
             summary={`Latest 7d: ${formatCurrency(
               headline.machineVolume7d
-            )} combined · solid lines are 7d averages.`}
+            )} combined. Solid lines show 7d averages.`}
+            help="x402 and MPP let software pay for online services through public networks. This chart adds the value reported by their explorers."
           >
             <TrendChart
               data={ranged.machine}
@@ -454,10 +519,11 @@ export default function Dashboard() {
           </ChartCard>
           <ChartCard
             kicker="DAILY COUNT"
-            title="Machine-payment transactions"
-            subtitle="Raw counts; inspect concentration before interpreting"
+            title="Software payment count"
+            subtitle="x402 and MPP explorer records"
             legend={machineLegend}
             summary={`x402 top server represents ${formatPercent(quality.top1TxShare)} of explorer transactions.`}
+            help="A transaction is one explorer record. Counts can rise even when little money changes hands, and one server can generate a large share."
           >
             <TrendChart
               data={ranged.machine}
@@ -537,83 +603,102 @@ export default function Dashboard() {
       <section className="section-shell" aria-labelledby="statistics-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">STATISTICAL CONFIRMATION</div>
-            <h2 id="statistics-title">Is the movement unusual—and economically coherent?</h2>
+            <div className="section-kicker">CHECKS BEHIND THE HEADLINE</div>
+            <h2 id="statistics-title">Direction, value, and time.</h2>
           </div>
-          <p className="section-note">
-            Descriptive diagnostics for early detection; they do not establish causality.
+          <p className="section-note note-with-help">
+            These checks describe the public data. They do not predict the future.
+            <InfoTip label="statistical checks">
+              The calculations compare recent values with earlier periods. They can flag
+              unusual movement, but they cannot tell us what caused it.
+            </InfoTip>
           </p>
         </div>
         <div className="analytics-grid">
-          <article className="analytic-card">
-            <span>X402 VALUE ANOMALY / 7D VS PRIOR 21D</span>
-            <strong>
-              {analytics.x402ValueAnomaly.zScore > 0 ? "+" : ""}
-              {analytics.x402ValueAnomaly.zScore.toFixed(2)}σ
-            </strong>
-            <p>
-              {Math.abs(analytics.x402ValueAnomaly.zScore) >= 2
-                ? "The recent daily mean is statistically unusual against its short baseline."
-                : "The recent daily mean remains inside a two-sigma short-baseline range."}
-            </p>
-          </article>
-          <article className="analytic-card">
-            <span>X402 COUNT–VALUE CORRELATION / 30D</span>
-            <strong>{analytics.x402CountValueCorrelation.toFixed(2)}</strong>
-            <p>{correlationRead(analytics.x402CountValueCorrelation)}</p>
-          </article>
-          <article className="analytic-card">
-            <span>MACHINE VALUE / 1K PAYMENTS / 7D</span>
-            <strong>{formatCurrency(analytics.machineValuePerThousandPayments, true)}</strong>
-            <p>Value density; rising counts with a collapsing figure are weaker evidence.</p>
-          </article>
-          <article className="analytic-card">
-            <span>MPP SHARE OF MACHINE VALUE / 7D</span>
-            <strong>{formatPercent(analytics.mppMachineValueShare, 2)}</strong>
-            <p>Protocol diversity check; one protocol should not define the entire signal.</p>
-          </article>
-          <article className="analytic-card long-horizon">
-            <span>STABLECOIN CAPACITY / 1Y</span>
-            <strong className={signedClass(analytics.stablecoinSupplyGrowth1yPct)}>
-              {formatPctPoint(analytics.stablecoinSupplyGrowth1yPct)}
-            </strong>
-            <p>Structural change in open settlement capacity across a full year.</p>
-          </article>
-          <article className="analytic-card long-horizon">
-            <span>STABLECOIN CAPACITY / 90D</span>
-            <strong className={signedClass(analytics.stablecoinSupplyGrowth90dPct)}>
-              {formatPctPoint(analytics.stablecoinSupplyGrowth90dPct)}
-            </strong>
-            <p>A medium-horizon check on whether the annual direction is still active.</p>
-          </article>
-          <article className="analytic-card long-horizon">
-            <span>DEX FLOW / 90D VS PRIOR 90D</span>
-            <strong className={signedClass(analytics.dexVolume90dChangePct)}>
-              {formatPctPoint(analytics.dexVolume90dChangePct)}
-            </strong>
-            <p>Open-market activity compared across two full quarters.</p>
-          </article>
-          <article className="analytic-card long-horizon">
-            <span>PUBLIC MACHINE HISTORY</span>
-            <strong>{coverage.machine.days}D</strong>
-            <p>
-              A hard coverage limit. The radar will build its own longitudinal record from
-              here.
-            </p>
-          </article>
+          <AnalyticCard
+            label="X402 VALUE CHANGE / 7D VS PRIOR 21D"
+            value={
+              <>
+                {analytics.x402ValueAnomaly.zScore > 0 ? "+" : ""}
+                {analytics.x402ValueAnomaly.zScore.toFixed(2)}σ
+              </>
+            }
+            note={
+              Math.abs(analytics.x402ValueAnomaly.zScore) >= 2
+                ? "The latest seven-day average is unusual beside the prior 21 days."
+                : "The latest seven-day average stays within the short baseline."
+            }
+            help="This uses a z-score. A value near 0 is normal for this short history. A value above +2 or below -2 is unusual."
+          />
+          <AnalyticCard
+            label="X402 COUNT AND VALUE LINK / 30D"
+            value={analytics.x402CountValueCorrelation.toFixed(2)}
+            note={correlationRead(analytics.x402CountValueCorrelation)}
+            help="Correlation shows whether payment count and payment value move together. 1 means they move together, 0 means no clear link, and -1 means they move in opposite directions."
+          />
+          <AnalyticCard
+            label="VALUE PER 1,000 PAYMENTS / 7D"
+            value={formatCurrency(analytics.machineValuePerThousandPayments, true)}
+            note="Shows whether a higher count also carries more money."
+            help="Seven-day x402 and MPP payment value divided by payment count, then multiplied by 1,000."
+          />
+          <AnalyticCard
+            label="MPP SHARE OF PAYMENT VALUE / 7D"
+            value={formatPercent(analytics.mppMachineValueShare, 2)}
+            note="Shows how much value comes from the second tracked protocol."
+            help="MPP payment value divided by combined x402 and MPP payment value."
+          />
+          <AnalyticCard
+            label="STABLECOIN SUPPLY / 1Y"
+            value={
+              <span className={signedClass(analytics.stablecoinSupplyGrowth1yPct)}>
+                {formatPctPoint(analytics.stablecoinSupplyGrowth1yPct)}
+              </span>
+            }
+            note="Change in circulating supply over one year."
+            help="Stablecoins can settle payments on public networks. More supply increases capacity, but does not prove software is using it."
+            tone="long-horizon"
+          />
+          <AnalyticCard
+            label="STABLECOIN SUPPLY / 90D"
+            value={
+              <span className={signedClass(analytics.stablecoinSupplyGrowth90dPct)}>
+                {formatPctPoint(analytics.stablecoinSupplyGrowth90dPct)}
+              </span>
+            }
+            note="Change in circulating supply over 90 days."
+            tone="long-horizon"
+          />
+          <AnalyticCard
+            label="DEX VOLUME / 90D VS PRIOR 90D"
+            value={
+              <span className={signedClass(analytics.dexVolume90dChangePct)}>
+                {formatPctPoint(analytics.dexVolume90dChangePct)}
+              </span>
+            }
+            note="Compares the latest 90 days with the previous 90."
+            help="DEX means decentralized exchange. This tracks trading on open networks, not software payments."
+            tone="long-horizon"
+          />
+          <AnalyticCard
+            label="PUBLIC PAYMENT HISTORY"
+            value={`${coverage.machine.days}D`}
+            note="The available explorer history limits every short-term comparison."
+            help="The public explorers currently expose only this many daily observations. The dashboard will preserve each future snapshot."
+            tone="long-horizon"
+          />
         </div>
       </section>
 
       <section className="section-shell" id="rails" aria-labelledby="rails-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">RAILS + OPEN MARKETS</div>
-            <h2 id="rails-title">Capacity, turnover, and route breadth.</h2>
+            <div className="section-kicker">SETTLEMENT AND TRADING</div>
+            <h2 id="rails-title">Money available and traded.</h2>
           </div>
           <div className="section-actions">
             <p className="section-note">
-              Default: one year. Use 90D for the medium view or 18M for the longest
-              comparable public window.
+              Charts start at one year. Switch to 90D or 18M.
             </p>
             <RangeSwitch value={range} onChange={setRange} />
           </div>
@@ -621,13 +706,14 @@ export default function Dashboard() {
         <div className="chart-grid">
           <ChartCard
             kicker="SETTLEMENT CAPACITY"
-            title="Stablecoin circulating supply"
-            subtitle={`${rails.chainsOver1b} chains above $1B · USDT ${formatPercent(
+            title="Stablecoin supply"
+            subtitle={`${rails.chainsOver1b} chains above $1B. USDT ${formatPercent(
               rails.usdtShare
-            )} · USDC ${formatPercent(rails.usdcShare)}`}
+            )}. USDC ${formatPercent(rails.usdcShare)}.`}
             summary={`One-year change: ${formatPctPoint(
               analytics.stablecoinSupplyGrowth1yPct
-            )} · orange line is the 30d mean.`}
+            )}. Orange line: 30d average.`}
+            help="Stablecoins are digital dollars and similar assets that move on public networks. Supply shows how much value is available for settlement."
           >
             <TrendChart
               data={ranged.stablecoins}
@@ -651,12 +737,13 @@ export default function Dashboard() {
             />
           </ChartCard>
           <ChartCard
-            kicker="OPEN-MARKET FLOW"
+            kicker="OPEN TRADING"
             title="Daily DEX volume"
             subtitle={`${formatNumber(rails.dexProtocols)} protocols in source coverage`}
             summary={`90d versus prior 90d: ${formatPctPoint(
               analytics.dexVolume90dChangePct
-            )} · orange line is the 30d mean.`}
+            )}. Orange line: 30d average.`}
+            help="DEX means decentralized exchange. The chart totals trading reported by DeFiLlama across the covered exchanges."
           >
             <TrendChart
               data={ranged.dex}
@@ -685,13 +772,12 @@ export default function Dashboard() {
       <section className="section-shell" aria-labelledby="developer-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">DEVELOPER PULL</div>
-            <h2 id="developer-title">SDK demand before production evidence.</h2>
+            <div className="section-kicker">DEVELOPER INTEREST</div>
+            <h2 id="developer-title">Package downloads.</h2>
           </div>
           <div className="section-actions">
             <p className="section-note">
-              npm downloads include CI, mirrors, and repeat installs. The same 90D, 1Y,
-              and 18M horizon applies.
+              npm counts automated and repeat downloads. Switch between 90D, 1Y, and 18M.
             </p>
             <RangeSwitch value={range} onChange={setRange} />
           </div>
@@ -699,12 +785,13 @@ export default function Dashboard() {
         <div className="developer-layout">
           <ChartCard
             kicker="WEEKLY DOWNLOADS"
-            title="Canonical machine-payment packages"
-            subtitle="@x402/core and mppx · daily data aggregated weekly"
+            title="x402 and MPP packages"
+            subtitle="@x402/core and mppx, grouped by week"
             legend={machineLegend}
             summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core · ${formatNumber(
               developer.mppDownloads28d
-            )} mppx · solid lines are 4w averages. The current UTC week is partial.`}
+            )} mppx. Solid lines show 4w averages. The current UTC week is partial.`}
+            help="Developers install these npm packages to build with x402 and MPP. Downloads show interest, but they do not prove live services or paying users."
           >
             <TrendChart
               data={ranged.npm}
@@ -756,10 +843,10 @@ export default function Dashboard() {
               <Bar value={50 + developer.mppGrowth13wPct / 2} color="var(--text)" />
             </article>
             <article className="proxy-warning">
-              <span>INTERPRETATION</span>
+              <span>LIMIT</span>
               <p>
-                Package growth can lead deployment, but it cannot establish paying users,
-                independent counterparties, or retained economic behavior.
+                Downloads can rise before deployment. They do not prove live services,
+                paying users, or repeat use.
               </p>
             </article>
           </div>
@@ -769,30 +856,47 @@ export default function Dashboard() {
       <section className="section-shell" id="quality" aria-labelledby="quality-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">EVIDENCE QUALITY</div>
-            <h2 id="quality-title">The anti-hype layer.</h2>
+            <div className="section-kicker">DATA QUALITY</div>
+            <h2 id="quality-title">How reliable is the signal?</h2>
           </div>
-          <p className="section-note">Counts are discounted when concentration or source disagreement rises.</p>
+          <p className="section-note">
+            The score falls when one server dominates or public providers disagree.
+          </p>
         </div>
 
         <div className="quality-grid">
           <article className="quality-card alert">
-            <div className="quality-label">X402 TOP-SERVER TRANSACTION SHARE</div>
+            <div className="quality-label">
+              <LabelWithHelp
+                label="X402 TOP-SERVER SHARE"
+                help="The largest listed x402 server’s share of all x402scan transactions. A high share means one service can move the headline count."
+              />
+            </div>
             <strong>{formatPercent(quality.top1TxShare)}</strong>
             <Bar value={quality.top1TxShare * 100} />
-            <p>High concentration can make one operator look like an ecosystem-wide shift.</p>
+            <p>One server drives this share of reported transactions.</p>
           </article>
           <article className="quality-card">
-            <div className="quality-label">X402 PROVIDER TRANSACTION GAP</div>
+            <div className="quality-label">
+              <LabelWithHelp
+                label="X402 PROVIDER GAP"
+                help="x402.org’s 30-day transaction total divided by x402scan’s total. A result of 1 means the providers match."
+              />
+            </div>
             <strong>{formatRatio(quality.providerTxGap)}</strong>
             <div className="provider-pair">
               <span>x402.org {formatNumber(protocols.x402.officialTransactions30d)}</span>
               <span>x402scan {formatNumber(protocols.x402.transactions30d)}</span>
             </div>
-            <p>Different attribution and coverage definitions reduce confidence in absolute totals.</p>
+            <p>Different coverage rules produce different totals.</p>
           </article>
           <article className="quality-card research">
-            <div className="quality-label">INDEPENDENT VALUE BOUND / BASE STUDY</div>
+            <div className="quality-label">
+              <LabelWithHelp
+                label="INDEPENDENT VALUE / BASE STUDY"
+                help="An academic study separated named independent services from internal transfers and activity classified as fictitious."
+              />
+            </div>
             <strong>
               {formatCurrency(authentic.independentValueFloorUsd)}–{formatCurrency(
                 authentic.independentValueCeilingUsd
@@ -802,24 +906,30 @@ export default function Dashboard() {
               <span>{formatPercent(authentic.fictitiousTxShare)} fictitious</span>
               <span>{formatPercent(authentic.internalClusterShare)} internal cluster</span>
             </div>
-            <p>Research bound for a 280-day Base population; not a haircut applied to current explorer totals.</p>
+            <p>A 280-day historical range. It is not applied to today’s totals.</p>
           </article>
         </div>
 
         <div className="signal-matrix">
           <header>
             <div>
-              <div className="section-kicker">SHIFT-SCORE COMPONENTS</div>
-              <h3>Transparent weights, visible weak links.</h3>
+              <div className="section-kicker">SCORE INPUTS</div>
+              <h3>How the score is built.</h3>
             </div>
-            <span>Heuristic · not a forecast</span>
+            <span className="matrix-note">
+              Rule-based score
+              <InfoTip label="rule-based score">
+                Each row has a fixed weight and range. The score summarizes current public
+                data. It is not a forecast or a statistical probability.
+              </InfoTip>
+            </span>
           </header>
           {snapshot.components.map((component) => (
             <div className="component-row" key={component.id}>
               <div>
                 <strong>{component.label}</strong>
                 <span>
-                  {component.available === false ? "SOURCE UNAVAILABLE · " : ""}
+                  {component.available === false ? "SOURCE UNAVAILABLE / " : ""}
                   {component.detail}
                 </span>
               </div>
@@ -838,8 +948,11 @@ export default function Dashboard() {
         <div className="section-heading">
           <div>
             <div className="section-kicker">RATIOS</div>
-            <h2 id="ratios-title">Denominators that stop big numbers from fooling us.</h2>
+            <h2 id="ratios-title">Scale and concentration.</h2>
           </div>
+          <p className="section-note">
+            Ratios compare each headline with the base that produced it.
+          </p>
         </div>
         <div className="table-wrap">
           <table>
@@ -853,11 +966,11 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {snapshot.ratios.map((row) => (
-                <tr key={row.label}>
+                <tr key={row.id}>
                   <td>{row.label}</td>
                   <td className="table-value">{ratioValue(row)}</td>
                   <td>{row.definition}</td>
-                  <td>{ratioRead(row.label, row.value)}</td>
+                  <td>{ratioRead(row.id, row.value)}</td>
                 </tr>
               ))}
             </tbody>
@@ -868,12 +981,11 @@ export default function Dashboard() {
       <section className="section-shell source-section" id="sources" aria-labelledby="sources-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">SOURCES + DEFINITIONS</div>
-            <h2 id="sources-title">Every headline should lead back to evidence.</h2>
+            <div className="section-kicker">PUBLIC SOURCES</div>
+            <h2 id="sources-title">Check the underlying data.</h2>
           </div>
           <p className="section-note">
-            No wallet keys, paid API credentials, or internal product data. Public source
-            code lives under welttowelt on GitHub.
+            The dashboard uses public data. Its source code is on GitHub.
           </p>
         </div>
         <div className="source-grid">
@@ -901,23 +1013,22 @@ export default function Dashboard() {
         <div className="methodology-note">
           <div className="methodology-index">01</div>
           <p>
-            <strong>What triggers a stronger signal?</strong> Machine-payment value and
-            counterparty breadth must rise alongside stablecoin capacity or open-market
-            activity, while developer pull strengthens and concentration falls. Raw counts
-            alone cannot produce a breakout state.
+            <strong>A stronger signal</strong>
+            Software payment value rises across more independent users. Stablecoin supply,
+            DEX volume, or package downloads confirm the direction.
           </p>
           <div className="methodology-index">02</div>
           <p>
-            <strong>What can break the signal?</strong> One operator dominating transactions,
-            provider definitions diverging, subsidized loops, self-payment clusters, stale
-            sources, or rising infrastructure capacity without repeated external economic use.
+            <strong>A weaker signal</strong>
+            One operator drives the count, providers disagree, sources go stale, or payments
+            loop within the same group.
           </p>
         </div>
       </section>
 
       <footer>
         <div className="radar-mark">OES <span>/</span> RADAR</div>
-        <p>Open Economic Systems Radar · methodology v{snapshot.meta.methodologyVersion}</p>
+        <p>Methodology v{snapshot.meta.methodologyVersion}</p>
         <a
           href="https://github.com/welttowelt/open-economic-systems-radar"
           target="_blank"
@@ -925,7 +1036,7 @@ export default function Dashboard() {
         >
           welttowelt / source ↗
         </a>
-        <p>Refresh windows: {snapshot.meta.refreshWindowsUtc.join(" · ")} UTC</p>
+        <p>Refresh windows: {snapshot.meta.refreshWindowsUtc.join(" / ")} UTC</p>
       </footer>
     </main>
   );
