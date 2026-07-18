@@ -85,3 +85,9 @@ packaging boundary because no `dist` worker artifact existed. The source now
 builds a supported Cloudflare OpenNext worker package. Local worker-runtime
 verification returned HTTP 200 for the page, icon, and snapshot API, with 9/9
 sources healthy and the six-hour cache headers intact.
+
+The first OpenNext archive then exposed a production-only `require is not
+defined` exception because it contained the adapter's unbundled entrypoint. The
+final build adds Wrangler's bundling pass before packaging and was separately
+tested with bundling disabled at runtime; the page, icon, and live snapshot API
+all returned HTTP 200 in that final package form.

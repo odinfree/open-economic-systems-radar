@@ -1,5 +1,7 @@
 .next/
 .open-next/
+.sites-bundle/
+.sites-bundle-*/
 dist/
 .wrangler/
 node_modules/
