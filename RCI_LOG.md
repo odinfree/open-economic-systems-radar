@@ -185,3 +185,66 @@ Review date: 2026-07-18
 - Verification: 13/13 tests pass; the packaged worker returns HTTP 200 with
   schema 1.3.0, 9/9 healthy sources, six ratios with stable IDs, and zero source
   failures. Desktop browser QA found no horizontal overflow or runtime errors.
+
+# Five-cycle RCI record — chart cadence controls
+
+Review date: 2026-07-19
+
+## RCI 1 — Calculation correctness
+
+- Problem: changing a chart label without changing its data would give readers
+  a false weekly, monthly, or yearly view.
+- Check: test calendar bucketing and the calculation used for each data type.
+- Fix: add one shared aggregation layer. Payment value, payment count, DEX
+  volume, and package downloads sum within the selected period. Stablecoin
+  supply uses the last reading in the period. Every cadence recalculates its
+  rolling average.
+- Verification: 17/17 tests pass, including Monday-based weekly totals,
+  monthly closes, cadence availability, and rolling-average recalculation.
+
+## RCI 2 — Availability and chart behavior
+
+- Problem: a yearly control can imply long history when a source has only a few
+  weeks of data.
+- Check: switch each chart through every cadence and change the long-history
+  range between 90D, 1Y, and 18M.
+- Fix: Daily, Weekly, and Monthly always appear. Yearly appears only when the
+  visible data covers at least 300 days and crosses two calendar years.
+- Verification: Playwright confirms independent controls on all five charts.
+  The 31-day payment charts stop at Monthly. Stablecoin, DEX, and npm charts
+  show Yearly at 1Y and 18M, then remove it at 90D.
+
+## RCI 3 — Responsive and accessible controls
+
+- Problem: four full-word buttons could overflow a phone-width chart card.
+- Check: measure the page and every cadence control at 390px, then inspect the
+  rendered payment card.
+- Fix: stack the cadence label above a full-width segmented control on phones.
+  Keep full Daily, Weekly, Monthly, and Yearly labels, visible focus, pressed
+  state, and a labelled group for assistive software.
+- Verification: the 390px viewport has a 390px document width. All five
+  controls fit inside 310px chart content, with zero console errors or warnings.
+
+## RCI 4 — Plain wording and explanations
+
+- Problem: fixed labels such as `DAILY VALUE` and summaries such as `30d
+  average` became wrong after the reader changed cadence. `Mean` also needed a
+  plain explanation.
+- Check: run the changed page copy through the Writing Cluster reader path and
+  the Stop Slop plain-language pass.
+- Fix: remove fixed-cadence claims, describe the actual period calculation,
+  and explain in each chart popup that `mean` is a rolling average.
+- Verification: the new copy contains no inflated claims, formulaic contrasts,
+  or hidden changes in the measurement boundary.
+
+## RCI 5 — Production package and API contract
+
+- Problem: daily npm charting adds a new public series and changes the snapshot
+  contract.
+- Check: build the production worker, run it locally, and request both the page
+  and snapshot API.
+- Fix: publish `series.npmDaily`, retain `series.npmWeekly` for compatibility,
+  and raise the API schema from 1.3.0 to 1.4.0.
+- Verification: the Cloudflare OpenNext package builds. The local worker returns
+  HTTP 200 for the page and API, schema 1.4.0, 9/9 healthy source groups, 547
+  npm daily rows, and zero source failures.

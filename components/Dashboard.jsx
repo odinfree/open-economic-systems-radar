@@ -260,7 +260,7 @@ export default function Dashboard() {
       machine: snapshot.series.machineDaily,
       stablecoins: filterRange(snapshot.series.stablecoinSupply, days),
       dex: filterRange(snapshot.series.dexDaily, days),
-      npm: filterRange(snapshot.series.npmWeekly, days)
+      npm: filterRange(snapshot.series.npmDaily || snapshot.series.npmWeekly, days)
     };
   }, [snapshot, range]);
 
@@ -470,95 +470,70 @@ export default function Dashboard() {
           </div>
           <p className="section-note">
             Explorer history starts {coverage.machine.start || "with the first available day"}.
-            The lines show a seven-day average across {coverage.machine.days} days.
+            Switch every chart between daily, weekly, and monthly totals. Yearly appears
+            once the visible data spans two calendar years.
           </p>
         </div>
         <div className="chart-grid">
           <ChartCard
-            kicker="DAILY VALUE"
+            kicker="PAYMENT VALUE"
             title="Software payment value"
             subtitle="x402 and MPP, USD"
             legend={machineLegend}
             summary={`Latest 7d: ${formatCurrency(
               headline.machineVolume7d
-            )} combined. Solid lines show 7d averages.`}
-            help="x402 and MPP let software pay for online services through public networks. This chart adds the value reported by their explorers."
+            )} combined.`}
+            help="x402 and MPP let software pay for online services through public networks. The chart adds payments within each selected period. The strong lines show a rolling average, labelled mean."
           >
             <TrendChart
               data={ranged.machine}
               valueType="currency"
-              lines={[
+              series={[
                 {
                   key: "x402VolumeUsd",
-                  name: "x402 daily",
+                  name: "x402",
                   color: "var(--signal)",
-                  opacity: 0.22
-                },
-                {
-                  key: "x402VolumeUsdMa7",
-                  name: "x402 7d mean",
-                  color: "var(--signal)",
-                  area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.22
                 },
                 {
                   key: "mppVolumeUsd",
-                  name: "MPP daily",
-                  color: "var(--body)",
-                  area: false,
-                  opacity: 0.22
-                },
-                {
-                  key: "mppVolumeUsdMa7",
-                  name: "MPP 7d mean",
+                  name: "MPP",
                   color: "var(--text)",
+                  rawColor: "var(--body)",
                   area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.22
                 }
               ]}
-              ariaLabel="Daily x402 and MPP payment value"
+              ariaLabel="x402 and MPP payment value"
             />
           </ChartCard>
           <ChartCard
-            kicker="DAILY COUNT"
+            kicker="PAYMENT COUNT"
             title="Software payment count"
             subtitle="x402 and MPP explorer records"
             legend={machineLegend}
             summary={`x402 top server represents ${formatPercent(quality.top1TxShare)} of explorer transactions.`}
-            help="A transaction is one explorer record. Counts can rise even when little money changes hands, and one server can generate a large share."
+            help="A transaction is one explorer record. The chart adds records within each selected period. The strong lines show a rolling average, labelled mean."
           >
             <TrendChart
               data={ranged.machine}
-              lines={[
+              series={[
                 {
                   key: "x402Transactions",
-                  name: "x402 daily",
+                  name: "x402",
                   color: "var(--signal)",
-                  opacity: 0.22
-                },
-                {
-                  key: "x402TransactionsMa7",
-                  name: "x402 7d mean",
-                  color: "var(--signal)",
-                  area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.22
                 },
                 {
                   key: "mppTransactions",
-                  name: "MPP daily",
-                  color: "var(--body)",
-                  area: false,
-                  opacity: 0.22
-                },
-                {
-                  key: "mppTransactionsMa7",
-                  name: "MPP 7d mean",
+                  name: "MPP",
                   color: "var(--text)",
+                  rawColor: "var(--body)",
                   area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.22
                 }
               ]}
-              ariaLabel="Daily x402 and MPP payment transactions"
+              ariaLabel="x402 and MPP payment transactions"
             />
           </ChartCard>
         </div>
@@ -727,25 +702,20 @@ export default function Dashboard() {
             )}. USDC ${formatPercent(rails.usdcShare)}.`}
             summary={`One-year change: ${formatPctPoint(
               analytics.stablecoinSupplyGrowth1yPct
-            )}. Orange line: 30d average.`}
-            help="Stablecoins are digital dollars and similar assets that move on public networks. Supply shows how much value is available for settlement."
+            )}. Orange line shows the selected rolling average.`}
+            help="Stablecoins are digital dollars and similar assets that move on public networks. Each point uses the last supply reading in the selected period. The orange line shows a rolling average, labelled mean."
           >
             <TrendChart
               data={ranged.stablecoins}
               valueType="currency"
-              lines={[
+              aggregation="last"
+              series={[
                 {
                   key: "supplyUsd",
-                  name: "Daily supply",
-                  color: "var(--body)",
-                  opacity: 0.22
-                },
-                {
-                  key: "supplyUsdMa30",
-                  name: "30d mean",
+                  name: "Supply",
                   color: "var(--signal)",
-                  area: false,
-                  strokeWidth: 2.5
+                  rawColor: "var(--body)",
+                  rawOpacity: 0.22
                 }
               ]}
               ariaLabel="Global stablecoin circulating supply"
@@ -753,32 +723,26 @@ export default function Dashboard() {
           </ChartCard>
           <ChartCard
             kicker="OPEN TRADING"
-            title="Daily DEX volume"
+            title="DEX volume"
             subtitle={`${formatNumber(rails.dexProtocols)} protocols in source coverage`}
             summary={`90d versus prior 90d: ${formatPctPoint(
               analytics.dexVolume90dChangePct
-            )}. Orange line: 30d average.`}
-            help="DEX means decentralized exchange. The chart totals trading reported by DeFiLlama across the covered exchanges."
+            )}. Orange line shows the selected rolling average.`}
+            help="DEX means decentralized exchange. The chart adds reported trading within each selected period. The orange line shows a rolling average, labelled mean."
           >
             <TrendChart
               data={ranged.dex}
               valueType="currency"
-              lines={[
+              series={[
                 {
                   key: "volumeUsd",
-                  name: "Daily volume",
-                  color: "var(--body)",
-                  opacity: 0.22
-                },
-                {
-                  key: "volumeUsdMa30",
-                  name: "30d mean",
+                  name: "Volume",
                   color: "var(--signal)",
-                  area: false,
-                  strokeWidth: 2.5
+                  rawColor: "var(--body)",
+                  rawOpacity: 0.22
                 }
               ]}
-              ariaLabel="Daily decentralized exchange volume"
+              ariaLabel="Decentralized exchange volume"
             />
           </ChartCard>
         </div>
@@ -799,47 +763,35 @@ export default function Dashboard() {
         </div>
         <div className="developer-layout">
           <ChartCard
-            kicker="WEEKLY DOWNLOADS"
+            kicker="PACKAGE DOWNLOADS"
             title="x402 and MPP packages"
-            subtitle="@x402/core and mppx, grouped by week"
+            subtitle="@x402/core and mppx"
             legend={machineLegend}
             summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core / ${formatNumber(
               developer.mppDownloads28d
-            )} mppx. Solid lines show 4w averages. The current UTC week is partial.`}
-            help="Developers install these npm packages to build with x402 and MPP. Downloads show interest, but they do not prove live services or paying users."
+            )} mppx.`}
+            help="Developers install these npm packages to build with x402 and MPP. The chart adds downloads within each selected period. The strong lines show a rolling average, labelled mean."
           >
             <TrendChart
               data={ranged.npm}
-              lines={[
+              defaultCadence="weekly"
+              series={[
                 {
                   key: "x402",
-                  name: "@x402/core weekly",
+                  name: "@x402/core",
                   color: "var(--signal)",
-                  opacity: 0.2
-                },
-                {
-                  key: "x402Ma4",
-                  name: "@x402/core 4w mean",
-                  color: "var(--signal)",
-                  area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.2
                 },
                 {
                   key: "mpp",
-                  name: "mppx weekly",
-                  color: "var(--body)",
-                  area: false,
-                  opacity: 0.2
-                },
-                {
-                  key: "mppMa4",
-                  name: "mppx 4w mean",
+                  name: "mppx",
                   color: "var(--text)",
+                  rawColor: "var(--body)",
                   area: false,
-                  strokeWidth: 2.5
+                  rawOpacity: 0.2
                 }
               ]}
-              ariaLabel="Weekly npm downloads for x402 core and mppx"
+              ariaLabel="npm downloads for x402 core and mppx"
             />
           </ChartCard>
           <div className="momentum-stack">
