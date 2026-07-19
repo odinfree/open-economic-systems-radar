@@ -3,6 +3,7 @@ import {
   addMovingAverage,
   aggregateDaily,
   buildMetrics,
+  packageActivityScore,
   pearsonCorrelation,
   pctChange,
   safeDivide,
@@ -29,6 +30,10 @@ describe("metric model", () => {
     expect(safeDivide(10, 0)).toBe(0);
     expect(pctChange(120, 100)).toBe(20);
     expect(scaleScore(0, -10, 0, 10)).toBe(50);
+    expect(packageActivityScore(-30)).toBe(0);
+    expect(packageActivityScore(0)).toBe(20);
+    expect(packageActivityScore(20)).toBe(30);
+    expect(packageActivityScore(40)).toBe(40);
     expect(formatCurrency(0)).toBe("$0");
   });
 
@@ -80,6 +85,20 @@ describe("metric model", () => {
     expect(output.series.machineDaily).toEqual([]);
     expect(output.series.stablecoinSupply).toEqual([]);
     expect(output.analytics.x402ValueAnomaly.observations).toBe(0);
+  });
+
+  it("does not score package activity when one package feed is missing", () => {
+    const npmX402 = days(56).map((date, index) => ({
+      date,
+      downloads: index < 28 ? 100 : 200
+    }));
+    const output = buildMetrics({ npmX402 }, new Date("2026-07-18T12:00:00Z"));
+    expect(
+      output.components.find((component) => component.id === "package-activity")
+    ).toMatchObject({
+      available: false,
+      score: 0
+    });
   });
 
   it("builds a bounded, concentration-aware shift score", () => {
@@ -164,7 +183,24 @@ describe("metric model", () => {
     expect(output.series.dexDaily.at(-1)).toHaveProperty("volumeUsdMa30");
     expect(output.series.npmWeekly.at(-1)).toHaveProperty("x402Ma4");
     expect(output.rails.supplyGrowth).toHaveProperty("d365");
-    expect(output.developer).toHaveProperty("x402Growth13wPct");
+    expect(output.packageActivity).toHaveProperty("x402Growth13wPct");
+    expect(output.developer).toEqual(output.packageActivity);
+    expect(output.packageActivity.uniqueDevelopersAvailable).toBe(false);
+    expect(output.adoptionMeasurement.status).toBe("unmeasured");
+    expect(output.adoptionMeasurement.metrics).toHaveLength(4);
+    expect(output.adoptionMeasurement.metrics.every((metric) => !metric.available)).toBe(true);
+    expect(
+      output.components.reduce((total, component) => total + component.weight, 0)
+    ).toBeCloseTo(1);
+    expect(
+      output.components.find((component) => component.id === "package-activity")
+    ).toMatchObject({
+      weight: 0.05,
+      score: expect.any(Number)
+    });
+    expect(
+      output.components.find((component) => component.id === "package-activity")?.score
+    ).toBeLessThanOrEqual(40);
     expect(output.analytics.x402CountValueCorrelation).toBeGreaterThanOrEqual(-1);
     expect(output.analytics.x402CountValueCorrelation).toBeLessThanOrEqual(1);
     expect(output.components.find((component) => component.id === "breadth")?.score).toBeLessThanOrEqual(

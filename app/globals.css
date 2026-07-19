@@ -383,6 +383,10 @@ a:focus-visible {
   color: var(--signal);
 }
 
+.state-data-gap {
+  color: var(--signal);
+}
+
 .state-early-build {
   color: var(--text);
 }
@@ -851,7 +855,7 @@ a:focus-visible {
   font-size: 17px;
 }
 
-.developer-layout {
+.package-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.45fr);
   gap: 18px;
@@ -903,6 +907,82 @@ a:focus-visible {
   color: var(--body);
   font-size: 15px;
   line-height: 1.5;
+}
+
+.adoption-measurement {
+  margin-top: 18px;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.adoption-measurement > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  gap: 28px;
+  align-items: end;
+  padding: 28px 0;
+}
+
+.adoption-measurement h3 {
+  margin: 7px 0 0;
+  font-size: clamp(23px, 2.4vw, 38px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.adoption-measurement > header p {
+  max-width: 43ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.adoption-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--hairline);
+}
+
+.adoption-metric-grid article {
+  min-height: 220px;
+  padding: 22px 22px 26px 0;
+}
+
+.adoption-metric-grid article + article {
+  padding-left: 22px;
+  border-left: 1px solid var(--hairline);
+}
+
+.adoption-metric-grid article > span,
+.adoption-metric-grid article > b {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.adoption-metric-grid article > span {
+  color: var(--signal);
+}
+
+.adoption-metric-grid strong {
+  display: block;
+  margin-top: 14px;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.adoption-metric-grid b {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--muted);
+}
+
+.adoption-metric-grid p {
+  margin: 12px 0 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .quality-grid {
@@ -1295,12 +1375,26 @@ footer a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .developer-layout {
+  .package-layout {
     grid-template-columns: 1fr;
   }
 
   .momentum-stack {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .adoption-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adoption-metric-grid article:nth-child(3) {
+    padding-left: 0;
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+
+  .adoption-metric-grid article:nth-child(4) {
+    border-top: 1px solid var(--hairline);
   }
 
   .quality-grid {
@@ -1436,6 +1530,28 @@ footer a {
 
   .momentum-stack {
     grid-template-columns: 1fr;
+  }
+
+  .adoption-measurement > header,
+  .adoption-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .adoption-metric-grid article {
+    min-height: 0;
+    padding: 16px 0;
+  }
+
+  .adoption-metric-grid article + article,
+  .adoption-metric-grid article:nth-child(3),
+  .adoption-metric-grid article:nth-child(4) {
+    padding-left: 0;
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+
+  .adoption-metric-grid p {
+    display: none;
   }
 
   .component-row {

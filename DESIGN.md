@@ -4,7 +4,7 @@
 
 Detect an early shift from closed, account-bound software commerce toward open,
 programmable economic activity. The dashboard must separate economic activity
-from capacity, developer interest, and manipulable transaction counters.
+from capacity, package fetch activity, and manipulable transaction counters.
 
 ## Audience
 
@@ -27,7 +27,7 @@ larger visual moves.
 2. High-signal economic and behavioral indicators
 3. Machine-payment movement
 4. Open-rail capacity and open-market activity
-5. Developer momentum
+5. Package fetch activity with a low-confidence label
 6. Concentration, source divergence, and authenticity warnings
 7. Ratios, definitions, and source provenance
 
@@ -56,8 +56,13 @@ larger visual moves.
 ## Claim boundaries
 
 - The shift score is a transparent heuristic, not a forecast.
+- A missing required source pauses the score and partial snapshots are not
+  cached.
 - Stablecoin supply is capacity, not commerce.
 - DEX volume is open-market activity, not agent activity.
-- npm downloads are developer interest, not production adoption.
+- npm package fetches are tarball responses, not unique developers or production
+  adoption.
+- New integrations, retention, first-time contributors, and importing
+  repositories stay unmeasured until a defensible public series exists.
 - x402 and MPP source windows are labelled and never blended silently.
 - Raw transaction counts receive concentration and authenticity context.

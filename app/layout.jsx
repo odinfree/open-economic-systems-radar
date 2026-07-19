@@ -6,7 +6,7 @@ import "@/app/globals.css";
 export const metadata = {
   title: "Open Economic Systems Radar",
   description:
-    "A public dashboard tracking software payments, stablecoin supply, open trading, developer interest, concentration, and independent use.",
+    "A public dashboard tracking software payments, stablecoin supply, open trading, package activity, concentration, and independent use.",
   openGraph: {
     title: "Open Economic Systems Radar",
     description:

@@ -125,7 +125,7 @@ export default function TrendChart({
         <ResponsiveContainer width="100%" height={height}>
           <ComposedChart
             data={chartData}
-            margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+            margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
           >
           <defs>
             {series.map((line) => (

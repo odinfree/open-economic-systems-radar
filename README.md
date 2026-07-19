@@ -6,7 +6,7 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
 - machine-payment activity;
 - stablecoin settlement capacity;
 - open-market activity;
-- developer adoption;
+- package fetch activity as a low-confidence proxy;
 - merchant and payer breadth;
 - concentration and provider disagreement;
 - authenticity research;
@@ -58,9 +58,11 @@ Public source requests are cached for 21,600 seconds. The first dashboard reques
 inside each UTC six-hour window produces or retrieves that window's snapshot.
 The dashboard exposes `generatedAt`, source health, and the next refresh window.
 This is demand-triggered revalidation, not a claim that a background cron ran
-when nobody requested the dashboard.
+when nobody requested the dashboard. A partial snapshot is not cached. If a
+required source fails, the dashboard shows `DATA GAP` and pauses the score
+instead of treating missing data as economic weakness.
 
-Rails, DEX, and developer charts default to one year and can switch between
+Rails, DEX, and package-activity charts default to one year and can switch between
 90 days, one year, and 18 months. Machine-payment explorers currently expose a
 much shorter history, so those charts show the full available source window and
 print its exact coverage instead of stretching it into a false long-term series.
@@ -69,6 +71,14 @@ Every chart can aggregate its visible history by day, week, or month. A yearly
 option appears only when the selected source window crosses at least two
 calendar years. Payment, volume, and download flows are summed within each
 period; stablecoin supply uses the last observation in the period.
+
+npm's public download API counts successful package tarball responses, not
+unique people. CI, disposable Docker builds, mirrors, robots, transitive
+installs, and local caches can all change the count. Package fetch activity
+therefore receives 5% of the score and its component score is capped at 40.
+Verified new integrations, retained integrations, first-time contributors, and
+new importing repositories remain explicitly unmeasured until a defensible
+public series exists.
 
 No private keys, wallet addresses, internal product data, or paid API keys are
 required.

@@ -2,7 +2,7 @@
 
 Reference: https://welttowelt-brand-sample-v18093.netlify.app/
 
-Review date: 2026-07-18
+Review date: 2026-07-19
 
 | Surface | Viewport | Check | Result |
 | --- | ---: | --- | --- |
@@ -26,10 +26,13 @@ Review date: 2026-07-18
 ## Horizon and behavior checks
 
 - Eligible charts default to 1Y and switch between 90D, 1Y, and 18M.
-- The 18M interaction updates both rails and developer views and exposes
+- The 18M interaction updates both rails and package-activity views and exposes
   year-aware x-axis labels.
 - Stablecoin and DEX charts use 30-day moving averages.
-- npm charts use four-week moving averages and 13-week comparisons.
+- npm charts show registry fetches, not unique developers, using four-week
+  moving averages and 13-week comparisons.
+- Package fetches carry a 5% score weight and a 40/100 component cap.
+- Daily, weekly, monthly, and yearly package-chart states render correctly.
 - Machine-payment charts show the full 31-day explorer window and state that
   coverage limit beside the charts.
 - The production browser reported zero console errors or warnings.
@@ -42,6 +45,8 @@ Review date: 2026-07-18
   removed.
 - Technical concepts use 26 compact explanation controls with plain
   definitions.
+- The four unmeasured adoption checks collapse to compact rows with explanation
+  controls at phone width.
 - Every explanation control has a unique target, supports click and keyboard
   use, closes with Escape, and stays within the desktop viewport.
 - Header anchors stop below the 72px sticky navigation.

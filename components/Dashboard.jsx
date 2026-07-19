@@ -11,6 +11,10 @@ import {
   formatRatio,
   signedClass
 } from "@/lib/format";
+import {
+  ADOPTION_METRICS,
+  SNAPSHOT_SCHEMA_VERSION
+} from "@/lib/schema";
 
 const RANGE_DAYS = { "90D": 90, "1Y": 365, "18M": 548 };
 
@@ -146,16 +150,21 @@ function RangeSwitch({ value, onChange }) {
   );
 }
 
-function ScoreDial({ score, state }) {
+function ScoreDial({ score, state, available = true }) {
+  const displayedScore = available ? score : "--";
   return (
     <div
       className="score-dial"
-      style={{ "--score": `${score * 3.6}deg` }}
-      aria-label={`Shift score ${score} out of 100, state ${state}`}
+      style={{ "--score": `${available ? score * 3.6 : 0}deg` }}
+      aria-label={
+        available
+          ? `Shift score ${score} out of 100, state ${state}`
+          : `Shift score unavailable, state ${state}`
+      }
     >
       <div className="score-dial-inner">
-        <strong>{score}</strong>
-        <span>/ 100</span>
+        <strong>{displayedScore}</strong>
+        <span>{available ? "/ 100" : "NO SCORE"}</span>
       </div>
     </div>
   );
@@ -209,7 +218,7 @@ function LoadingState() {
         <div>
           <div className="section-kicker">LOADING PUBLIC DATA</div>
           <h1>Checking the open economy.</h1>
-          <p>x402, MPP, stablecoins, DEXs, npm, and data quality</p>
+          <p>x402, MPP, stablecoins, DEXs, package fetches, and data quality</p>
         </div>
       </div>
     </main>
@@ -227,9 +236,12 @@ export default function Dashboard() {
     setRefreshing(true);
     try {
       const currentSlot = Math.floor(Date.now() / 21_600_000);
-      const response = await fetch(`/api/snapshot?slot=${currentSlot}`, {
-        cache: manual ? "no-store" : "default"
-      });
+      const response = await fetch(
+        `/api/snapshot?slot=${currentSlot}&schema=${SNAPSHOT_SCHEMA_VERSION}`,
+        {
+          cache: manual ? "no-store" : "default"
+        }
+      );
       if (!response.ok) throw new Error(`Snapshot request failed: ${response.status}`);
       setSnapshot(await response.json());
       setError(null);
@@ -279,7 +291,12 @@ export default function Dashboard() {
     );
   }
 
-  const { verdict, headline, protocols, rails, developer, quality } = snapshot;
+  const { verdict, headline, protocols, rails, quality } = snapshot;
+  const packageActivity = snapshot.packageActivity || snapshot.developer || {};
+  const adoptionMeasurement = snapshot.adoptionMeasurement || {
+    status: "unmeasured",
+    metrics: ADOPTION_METRICS
+  };
   const analytics = snapshot.analytics || {
     x402ValueAnomaly: {
       zScore: 0,
@@ -306,6 +323,10 @@ export default function Dashboard() {
   const machineLegend = [
     { name: "x402", color: "var(--signal)" },
     { name: "MPP", color: "var(--text)" }
+  ];
+  const packageLegend = [
+    { name: "@x402/core", color: "var(--signal)" },
+    { name: "mppx", color: "var(--text)" }
   ];
 
   return (
@@ -364,7 +385,11 @@ export default function Dashboard() {
           )}
         </div>
         <div className="verdict-panel">
-          <ScoreDial score={verdict.score} state={verdict.state} />
+          <ScoreDial
+            score={verdict.score}
+            state={verdict.state}
+            available={verdict.scoreAvailable !== false}
+          />
           <div className="verdict-copy">
             <div className="verdict-label">CURRENT READ</div>
             <div className={`verdict-state state-${verdict.state.toLowerCase().replace(" ", "-")}`}>
@@ -374,9 +399,11 @@ export default function Dashboard() {
             <span className="verdict-confidence">
               Confidence: {verdict.confidence}
               <InfoTip label="confidence">
-                {verdict.confidence === "CONTESTED"
-                  ? "Two public x402 providers report totals that differ enough to lower confidence."
-                  : "The main public sources broadly agree. The market is still young and incomplete."}
+                {verdict.confidence === "LOW"
+                  ? "Required data is missing. The dashboard pauses the shift score until the sources recover."
+                  : verdict.confidence === "CONTESTED"
+                    ? "Two public x402 providers report totals that differ enough to lower confidence."
+                    : "The main public sources broadly agree. The market is still young and incomplete."}
               </InfoTip>
             </span>
           </div>
@@ -748,29 +775,29 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="section-shell" aria-labelledby="developer-title">
+      <section className="section-shell" aria-labelledby="package-activity-title">
         <div className="section-heading">
           <div>
-            <div className="section-kicker">DEVELOPER INTEREST</div>
-            <h2 id="developer-title">Package downloads.</h2>
+            <div className="section-kicker">LOW-CONFIDENCE PROXY</div>
+            <h2 id="package-activity-title">Package fetch activity.</h2>
           </div>
           <div className="section-actions">
             <p className="section-note">
-              npm counts automated and repeat downloads. Switch between 90D, 1Y, and 18M.
+              npm counts tarball responses, not people. Switch between 90D, 1Y, and 18M.
             </p>
             <RangeSwitch value={range} onChange={setRange} />
           </div>
         </div>
-        <div className="developer-layout">
+        <div className="package-layout">
           <ChartCard
-            kicker="PACKAGE DOWNLOADS"
-            title="x402 and MPP packages"
+            kicker="REGISTRY FETCHES"
+            title="x402 and MPP package fetches"
             subtitle="@x402/core and mppx"
-            legend={machineLegend}
-            summary={`Latest 28d: ${formatNumber(developer.x402Downloads28d)} x402 core / ${formatNumber(
-              developer.mppDownloads28d
+            legend={packageLegend}
+            summary={`Latest 28d: ${formatNumber(packageActivity.x402Downloads28d)} x402 core / ${formatNumber(
+              packageActivity.mppDownloads28d
             )} mppx.`}
-            help="Developers install these npm packages to build with x402 and MPP. The chart adds downloads within each selected period. The strong lines show a rolling average, labelled mean."
+            help="npm counts successful package tarball responses. Disposable CI and Docker builds, mirrors, robots, and transitive installs can add fetches. Local caches can hide repeat human installs. The public API does not expose unique or first-time developers."
           >
             <TrendChart
               data={ranged.npm}
@@ -791,31 +818,58 @@ export default function Dashboard() {
                   rawOpacity: 0.2
                 }
               ]}
-              ariaLabel="npm downloads for x402 core and mppx"
+              ariaLabel="npm package fetches for x402 core and mppx"
             />
           </ChartCard>
           <div className="momentum-stack">
             <article>
-              <span>@x402/core / 13W VS PRIOR 13W</span>
-              <strong className={signedClass(developer.x402Growth13wPct)}>
-                {formatPctPoint(developer.x402Growth13wPct)}
+              <span>@x402/core FETCHES / 13W VS PRIOR</span>
+              <strong className={signedClass(packageActivity.x402Growth13wPct)}>
+                {formatPctPoint(packageActivity.x402Growth13wPct)}
               </strong>
-              <Bar value={50 + developer.x402Growth13wPct / 2} />
+              <Bar value={50 + packageActivity.x402Growth13wPct / 2} />
             </article>
             <article>
-              <span>mppx / 13W VS PRIOR 13W</span>
-              <strong className={signedClass(developer.mppGrowth13wPct)}>
-                {formatPctPoint(developer.mppGrowth13wPct)}
+              <span>mppx FETCHES / 13W VS PRIOR</span>
+              <strong className={signedClass(packageActivity.mppGrowth13wPct)}>
+                {formatPctPoint(packageActivity.mppGrowth13wPct)}
               </strong>
-              <Bar value={50 + developer.mppGrowth13wPct / 2} color="var(--text)" />
+              <Bar
+                value={50 + packageActivity.mppGrowth13wPct / 2}
+                color="var(--text)"
+              />
             </article>
             <article className="proxy-warning">
-              <span>LIMIT</span>
+              <span>EVIDENCE GRADE</span>
+              <strong>{packageActivity.evidenceGrade || "LOW"}</strong>
               <p>
-                Downloads can rise before deployment. They do not prove live services,
-                paying users, or repeat use.
+                Package fetches have a 5% weight and a 40/100 component cap, so they
+                add no more than two points.
               </p>
             </article>
+          </div>
+        </div>
+        <div className="adoption-measurement">
+          <header>
+            <div>
+              <div className="section-kicker">ADOPTION CHECK</div>
+              <h3>What the public data still cannot show.</h3>
+            </div>
+            <p>
+              These measures are not publicly available yet and do not affect the score.
+            </p>
+          </header>
+          <div className="adoption-metric-grid">
+            {adoptionMeasurement.metrics.map((metric) => (
+              <article key={metric.id}>
+                <span>{metric.role}</span>
+                <strong>
+                  <LabelWithHelp label={metric.label} help={metric.definition} />
+                </strong>
+                <b>{metric.available ? "AVAILABLE" : "NOT MEASURED"}</b>
+                <p>{metric.definition}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -977,15 +1031,15 @@ export default function Dashboard() {
         <div className="methodology-note">
           <div className="methodology-index">01</div>
           <p>
-            <strong>A stronger signal</strong>
-            Software payment value rises across more buyer and seller addresses. Stablecoin
-            supply, DEX volume, or package downloads rise in the same period.
+            <strong>Evidence of real use</strong>
+            Payment value rises across unrelated buyers, sellers, and named services.
+            The activity survives 30-day and 90-day retention checks.
           </p>
           <div className="methodology-index">02</div>
           <p>
-            <strong>A weaker signal</strong>
-            One operator drives the count, providers disagree, sources go stale, or payments
-            loop within the same group.
+            <strong>Signals that need a discount</strong>
+            Package fetches, concentrated counts, provider disagreement, and internal
+            payment loops can rise without new independent users.
           </p>
         </div>
       </section>

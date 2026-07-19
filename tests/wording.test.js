@@ -27,7 +27,11 @@ describe("public wording", () => {
       "anti-hype",
       "scale only counts",
       "every headline should",
-      "is software entering"
+      "is software entering",
+      "developer adoption",
+      "developer activity",
+      "developer interest",
+      "leading proxy"
     ];
 
     for (const phrase of blocked) {

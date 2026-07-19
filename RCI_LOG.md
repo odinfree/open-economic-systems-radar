@@ -248,3 +248,77 @@ Review date: 2026-07-19
 - Verification: the Cloudflare OpenNext package builds. The local worker returns
   HTTP 200 for the page and API, schema 1.4.0, 9/9 healthy source groups, 547
   npm daily rows, and zero source failures.
+
+# Five-cycle RCI record — package activity correction
+
+Review date: 2026-07-19
+
+## RCI 1 — Evidence boundary
+
+- Problem: npm aggregate downloads were framed as developer adoption even
+  though the public API does not expose unique or first-time developers.
+- Evidence: npm counts successful package tarball responses, including some CI,
+  disposable builds, mirrors, robots, and repeat fetches. Local caching can also
+  hide repeat human installs.
+- Consequence: one user or automated system could look like many new builders.
+- Smallest fix: rename the section `Package fetch activity`, label it a
+  low-confidence proxy, and list verified integrations, retention, first-time
+  contributors, and new importing repositories as explicitly unmeasured.
+- Verification: the source card links npm's public download-count definition,
+  and public wording no longer calls downloads developer adoption.
+
+## RCI 2 — Score semantics
+
+- Problem: a simple cap made flat package activity and explosive growth both
+  score 40. One available package feed could also make the combined component
+  appear complete.
+- Evidence: the original capped mapping returned 40 at zero growth and above;
+  availability used either npm feed.
+- Consequence: the component lost direction and could hide a source failure.
+- Smallest fix: scale the original result into a monotonic 0 to 40 range,
+  require both package feeds, give the component a 5% weight, and keep it below
+  the score's positive-component threshold.
+- Verification: tests cover the 0, 20, 30, and 40 score points, one-feed
+  failure, the 40 cap, and weights totaling 100%.
+
+## RCI 3 — Cache and outage behavior
+
+- Problem: a stale API cache could preserve the previous 15% package weight,
+  and a required-source outage could lower the score for six hours.
+- Evidence: the client cache key included only the time slot, while partial and
+  ready snapshots shared the same cache policy.
+- Consequence: deployment timing or an upstream failure could display a false
+  score.
+- Smallest fix: version the client cache key with schema 1.5.0, retain the old
+  `developer` API alias for one migration cycle, make the API route dynamic,
+  return `no-store` for partial snapshots, and show `DATA GAP` with no score
+  until required sources recover.
+- Verification: snapshot-contract tests cover the data-gap and cache rules. The
+  production build reports the snapshot route as dynamic.
+
+## RCI 4 — Public hierarchy and interaction
+
+- Problem: the package legend named protocols rather than packages, and four
+  full unmeasured cards pushed stronger evidence too far down the phone view.
+- Evidence: the plotted series are `@x402/core` and `mppx`; the first mobile
+  pass stacked four long definitions.
+- Consequence: readers could misread the series and spend more attention on
+  missing data than measured concentration and authenticity evidence.
+- Smallest fix: use package names in the legend, compress the mobile adoption
+  rows, and move definitions into the existing keyboard-accessible explanation
+  controls.
+- Verification: desktop and 390px browser checks show no horizontal overflow,
+  no console errors, and working explanation controls.
+
+## RCI 5 — Wording and privacy
+
+- Problem: public copy needed a final pass after the metric and resilience
+  changes.
+- Check: apply the Writing Cluster reader path and Stop Slop rules, then scan
+  the public source for inflated adoption language, rhetorical headings,
+  decorative separators, the banned filler term, and personal names.
+- Smallest fix: use measured nouns, explain the two-point maximum directly,
+  replace internal roles with `MAIN PROOF`, `RETENTION CHECK`, and `SUPPORTING
+  CHECK`, and keep all personal names out of the frontend.
+- Verification: 21/21 tests pass, including wording and snapshot-contract
+  checks.
