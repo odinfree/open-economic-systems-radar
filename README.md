@@ -11,7 +11,9 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
 - concentration and provider disagreement;
 - authenticity research;
 - short-baseline anomaly, count-value correlation, value density, and protocol-diversity diagnostics;
-- 90-day, one-year, and 18-month trend views with explicit source-coverage limits.
+- 90-day, one-year, and 18-month trend views with explicit source-coverage limits;
+- daily, weekly, and monthly aggregation on every chart, plus yearly aggregation
+  when the source spans multiple calendar years.
 
 The public source of record is
 [welttowelt/open-economic-systems-radar](https://github.com/welttowelt/open-economic-systems-radar).
@@ -62,6 +64,11 @@ Rails, DEX, and developer charts default to one year and can switch between
 90 days, one year, and 18 months. Machine-payment explorers currently expose a
 much shorter history, so those charts show the full available source window and
 print its exact coverage instead of stretching it into a false long-term series.
+
+Every chart can aggregate its visible history by day, week, or month. A yearly
+option appears only when the selected source window crosses at least two
+calendar years. Payment, volume, and download flows are summed within each
+period; stablecoin supply uses the last observation in the period.
 
 No private keys, wallet addresses, internal product data, or paid API keys are
 required.

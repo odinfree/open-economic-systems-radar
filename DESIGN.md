@@ -36,7 +36,11 @@ larger visual moves.
 - Eligible history charts default to one year and offer 90D, 1Y, and 18M views.
 - Machine-payment charts show their complete explorer window because no honest
   medium- or long-term public series exists yet.
-- 30-day and four-week moving averages expose direction in noisy daily data.
+- Every chart offers daily, weekly, and monthly aggregation. Yearly appears
+  only when the selected source window spans at least two calendar years.
+- Flow charts sum each selected period. Stock charts use the period close.
+- Trend lines recalculate from the selected cadence instead of retaining a
+  daily-only average.
 - Metric definitions are visible without requiring a hidden help center.
 - Source links open the underlying public source.
 - Refresh requests use the current six-hour UTC window.

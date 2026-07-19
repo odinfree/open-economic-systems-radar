@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -12,12 +12,37 @@ import {
   YAxis
 } from "recharts";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import {
+  availableCadences,
+  CHART_CADENCES,
+  prepareChartRows,
+  trendKey
+} from "@/lib/chart-series";
 
-function TooltipPanel({ active, payload, label, valueType }) {
+function formatPeriodDate(value, cadence, compact = false) {
+  const date = new Date(`${value}T00:00:00Z`);
+  if (cadence === "yearly") return String(date.getUTCFullYear());
+  if (cadence === "monthly") {
+    return date.toLocaleDateString("en-US", {
+      month: compact ? "short" : "long",
+      year: "numeric",
+      timeZone: "UTC"
+    });
+  }
+  const formatted = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: compact ? undefined : "numeric",
+    timeZone: "UTC"
+  });
+  return cadence === "weekly" && !compact ? `Week of ${formatted}` : formatted;
+}
+
+function TooltipPanel({ active, payload, label, valueType, cadence }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip">
-      <div className="chart-tooltip-date">{label}</div>
+      <div className="chart-tooltip-date">{formatPeriodDate(label, cadence)}</div>
       {payload.map((item) => (
         <div className="chart-tooltip-row" key={item.dataKey}>
           <span className="legend-dot" style={{ background: item.color }} />
@@ -35,32 +60,75 @@ function TooltipPanel({ active, payload, label, valueType }) {
 
 export default function TrendChart({
   data,
-  lines,
+  series,
+  aggregation = "sum",
+  defaultCadence = "daily",
   valueType = "number",
   height = 260,
   ariaLabel
 }) {
+  const [cadence, setCadence] = useState(defaultCadence);
+  const cadences = useMemo(() => availableCadences(data), [data]);
+  useEffect(() => {
+    if (!cadences.includes(cadence)) setCadence(cadences[0]);
+  }, [cadence, cadences]);
+
+  const chartData = useMemo(
+    () => prepareChartRows(data, series.map((item) => item.key), cadence, aggregation),
+    [aggregation, cadence, data, series]
+  );
   const formatter = valueType === "currency" ? formatCurrency : formatNumber;
   const chartId = useId().replaceAll(":", "");
   const spanDays =
-    data?.length > 1
-      ? (new Date(data.at(-1).date).getTime() - new Date(data[0].date).getTime()) /
+    chartData?.length > 1
+      ? (new Date(chartData.at(-1).date).getTime() -
+          new Date(chartData[0].date).getTime()) /
         86_400_000
       : 0;
-  const dateFormatter = (value) =>
-    spanDays >= 300
-      ? new Date(`${value}T00:00:00Z`).toLocaleDateString("en-US", {
-          month: "short",
-          year: "2-digit",
-          timeZone: "UTC"
-        })
-      : value.slice(5);
+  const dateFormatter = (value) => {
+    if (cadence === "yearly") return formatPeriodDate(value, cadence, true);
+    if (cadence === "monthly" || spanDays >= 300) {
+      return new Date(`${value}T00:00:00Z`).toLocaleDateString("en-US", {
+        month: "short",
+        year: "2-digit",
+        timeZone: "UTC"
+      });
+    }
+    return formatPeriodDate(value, cadence, true);
+  };
+  const cadenceConfig = CHART_CADENCES[cadence];
+
   return (
-    <div className="chart-wrap" role="img" aria-label={ariaLabel}>
-      <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+    <div className="chart-wrap">
+      <div className="chart-cadence-row">
+        <span>
+          {aggregation === "last" ? "PERIOD CLOSE" : "PERIOD TOTAL"} /{" "}
+          {cadenceConfig.trendLabel.toUpperCase()}
+        </span>
+        <div className="chart-cadence-switch" role="group" aria-label={`${ariaLabel} cadence`}>
+          {cadences.map((option) => (
+            <button
+              type="button"
+              key={option}
+              className={option === cadence ? "active" : ""}
+              aria-pressed={option === cadence}
+              aria-label={CHART_CADENCES[option].label}
+              title={CHART_CADENCES[option].label}
+              onClick={() => setCadence(option)}
+            >
+              {CHART_CADENCES[option].label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div role="img" aria-label={`${ariaLabel}, ${cadenceConfig.label.toLowerCase()} view`}>
+        <ResponsiveContainer width="100%" height={height}>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+          >
           <defs>
-            {lines.map((line) => (
+            {series.map((line) => (
               <linearGradient
                 key={line.key}
                 id={`${chartId}-gradient-${line.key}`}
@@ -92,42 +160,54 @@ export default function TrendChart({
           />
           <Tooltip
             cursor={{ stroke: "var(--hairline)", strokeDasharray: "3 3" }}
-            content={<TooltipPanel valueType={valueType} />}
+            content={<TooltipPanel valueType={valueType} cadence={cadence} />}
           />
-          {lines.map((line, index) =>
-            index === 0 && line.area !== false ? (
+          {series.map((line, index) =>
+            (line.area ?? index === 0) ? (
               <Area
-                key={line.key}
+                key={`raw-${line.key}`}
                 type="monotone"
                 dataKey={line.key}
-                name={line.name}
-                stroke={line.color}
+                name={`${line.name} ${cadenceConfig.periodLabel}`}
+                stroke={line.rawColor || line.color}
                 fill={`url(#${chartId}-gradient-${line.key})`}
-                strokeWidth={line.strokeWidth || 2}
-                strokeDasharray={line.dash}
-                opacity={line.opacity ?? 1}
-                dot={false}
+                strokeWidth={line.rawStrokeWidth || 1.5}
+                opacity={line.rawOpacity ?? 0.22}
+                dot={cadence === "yearly" ? { r: 3, strokeWidth: 0 } : false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 isAnimationActive={false}
               />
             ) : (
               <Line
-                key={line.key}
+                key={`raw-${line.key}`}
                 type="monotone"
                 dataKey={line.key}
-                name={line.name}
-                stroke={line.color}
-                strokeWidth={line.strokeWidth || 2}
-                strokeDasharray={line.dash}
-                opacity={line.opacity ?? 1}
-                dot={false}
+                name={`${line.name} ${cadenceConfig.periodLabel}`}
+                stroke={line.rawColor || line.color}
+                strokeWidth={line.rawStrokeWidth || 1.5}
+                opacity={line.rawOpacity ?? 0.22}
+                dot={cadence === "yearly" ? { r: 3, strokeWidth: 0 } : false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 isAnimationActive={false}
               />
             )
           )}
-        </ComposedChart>
-      </ResponsiveContainer>
+          {series.map((line) => (
+            <Line
+              key={`trend-${line.key}`}
+              type="monotone"
+              dataKey={trendKey(line.key)}
+              name={`${line.name} ${cadenceConfig.trendLabel}`}
+              stroke={line.trendColor || line.color}
+              strokeWidth={line.trendStrokeWidth || 2.5}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0 }}
+              isAnimationActive={false}
+            />
+          ))}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
