@@ -2,26 +2,48 @@ import { describe, expect, it } from "vitest";
 import {
   aggregateChartRows,
   availableCadences,
+  completeCalendarYears,
   prepareChartRows,
   prepareRatioChartRows,
   trendKey
 } from "../lib/chart-series";
 
 describe("chart cadence aggregation", () => {
-  it("always offers daily, weekly, and monthly, then adds yearly with one year of history", () => {
+  it("adds yearly only when two complete calendar years are visible", () => {
     expect(
       availableCadences([
-        { date: "2026-01-01" },
-        { date: "2026-12-31" }
+        { date: "2025-01-19" },
+        { date: "2026-07-20" }
       ])
     ).toEqual(["daily", "weekly", "monthly"]);
 
     expect(
       availableCadences([
         { date: "2025-01-01" },
-        { date: "2026-01-01" }
+        { date: "2026-12-31" }
       ])
     ).toEqual(["daily", "weekly", "monthly", "yearly"]);
+  });
+
+  it("identifies complete years and excludes partial edges from yearly totals", () => {
+    const rows = [
+      { date: "2023-07-20", value: 10 },
+      { date: "2024-01-01", value: 20 },
+      { date: "2024-12-31", value: 30 },
+      { date: "2025-01-01", value: 40 },
+      { date: "2025-12-31", value: 50 },
+      { date: "2026-07-20", value: 60 }
+    ];
+
+    expect(completeCalendarYears(rows)).toEqual([2024, 2025]);
+    expect(aggregateChartRows(rows, ["value"], "yearly", "sum")).toEqual([
+      { date: "2024-01-01", value: 50 },
+      { date: "2025-01-01", value: 90 }
+    ]);
+    expect(aggregateChartRows(rows, ["value"], "yearly", "last")).toEqual([
+      { date: "2024-01-01", value: 30 },
+      { date: "2025-01-01", value: 50 }
+    ]);
   });
 
   it("sums flow values into Monday-based weekly buckets", () => {

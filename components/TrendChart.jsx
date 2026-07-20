@@ -108,6 +108,19 @@ export default function TrendChart({
     return formatPeriodDate(value, cadence, true);
   };
   const cadenceConfig = CHART_CADENCES[cadence];
+  const yearlyAvailable = cadences.includes("yearly");
+  const yearlyStatusId = `${chartId}-yearly-status`;
+  const periodNote =
+    cadence === "yearly"
+      ? "COMPLETE CALENDAR YEARS ONLY"
+      : partialPeriods && cadence !== "daily"
+        ? "EDGE PERIODS MAY BE PARTIAL"
+        : null;
+  const chartNotes = [
+    dataQualityNote,
+    periodNote,
+    !yearlyAvailable ? "YEARLY NEEDS 2 COMPLETE CALENDAR YEARS" : null
+  ].filter(Boolean);
 
   return (
     <div className="chart-wrap">
@@ -119,30 +132,47 @@ export default function TrendChart({
             /{" "}
             {cadenceConfig.trendLabel.toUpperCase()}
           </span>
-          {(dataQualityNote || (partialPeriods && cadence !== "daily")) && (
-            <small>
-              {[dataQualityNote, partialPeriods && cadence !== "daily"
-                ? "EDGE PERIODS MAY BE PARTIAL"
-                : null]
-                .filter(Boolean)
-                .join(" / ")}
+          {chartNotes.length > 0 && (
+            <small id={!yearlyAvailable ? yearlyStatusId : undefined}>
+              {chartNotes.join(" / ")}
             </small>
           )}
         </div>
-        <div className="chart-cadence-switch" role="group" aria-label={`${ariaLabel} cadence`}>
-          {cadences.map((option) => (
-            <button
-              type="button"
-              key={option}
-              className={option === cadence ? "active" : ""}
-              aria-pressed={option === cadence}
-              aria-label={CHART_CADENCES[option].label}
-              title={CHART_CADENCES[option].label}
-              onClick={() => setCadence(option)}
-            >
-              {CHART_CADENCES[option].label}
-            </button>
-          ))}
+        <div
+          className="chart-cadence-switch"
+          role="group"
+          aria-label={`${ariaLabel} cadence`}
+          aria-describedby={!yearlyAvailable ? yearlyStatusId : undefined}
+        >
+          {Object.keys(CHART_CADENCES).map((option) => {
+            const available = cadences.includes(option);
+            const unavailableReason =
+              option === "yearly"
+                ? "Needs two complete calendar years of visible data"
+                : "Unavailable";
+            return (
+              <button
+                type="button"
+                key={option}
+                className={option === cadence ? "active" : ""}
+                aria-pressed={option === cadence}
+                aria-label={
+                  available
+                    ? CHART_CADENCES[option].label
+                    : `${CHART_CADENCES[option].label} unavailable: ${unavailableReason}`
+                }
+                title={
+                  available
+                    ? CHART_CADENCES[option].label
+                    : unavailableReason
+                }
+                disabled={!available}
+                onClick={() => setCadence(option)}
+              >
+                {CHART_CADENCES[option].label}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div role="img" aria-label={`${ariaLabel}, ${cadenceConfig.label.toLowerCase()} view`}>

@@ -11,9 +11,9 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
 - concentration and provider disagreement;
 - authenticity research;
 - short-baseline anomaly, count-value correlation, value density, and protocol-diversity diagnostics;
-- 90-day, one-year, and 18-month trend views with explicit source-coverage limits;
+- 90-day, one-year, 18-month, and five-year trend views where source history permits;
 - daily, weekly, and monthly aggregation on every chart, plus yearly aggregation
-  when the source spans multiple calendar years.
+  when the visible source history contains two complete calendar years.
 
 The public source of record is
 [welttowelt/open-economic-systems-radar](https://github.com/welttowelt/open-economic-systems-radar).
@@ -32,8 +32,9 @@ Refresh the frozen evidence deliberately with:
 RADAR_SNAPSHOT_URL=https://your-radar.example/api/snapshot npm run capture:blog
 ```
 
-The three historical charts offer daily, weekly, and monthly aggregation, plus
-yearly aggregation when the series spans enough history. The three bearish
+The three historical charts offer daily, weekly, and monthly aggregation. The
+stablecoin chart also offers yearly aggregation because its source supplies
+complete calendar years; npm's 18-month API limit does not. The three bearish
 charts use fixed study or current 30-day aggregates because no underlying daily
 history is published; the article labels that limit instead of manufacturing a
 time series.
@@ -82,15 +83,17 @@ when nobody requested the dashboard. A partial snapshot is not cached. If a
 required source fails, the dashboard shows `DATA GAP` and pauses the score
 instead of treating missing data as economic weakness.
 
-Rails, DEX, and package-activity charts default to one year and can switch between
-90 days, one year, and 18 months. Machine-payment explorers currently expose a
+Rails, DEX, and package-activity charts default to one year. Rails and DEX can
+switch through five years; package activity stops at the npm API's 18-month
+limit. Machine-payment explorers currently expose a
 much shorter history, so those charts show the full available source window and
 print its exact coverage instead of stretching it into a false long-term series.
 
-Every chart can aggregate its visible history by day, week, or month. A yearly
-option appears only when the selected source window crosses at least two
-calendar years. Payment, volume, and download flows are summed within each
-period; stablecoin supply uses the last observation in the period.
+Every chart can aggregate its visible history by day, week, or month. The
+Yearly control enables only when the selected source window contains at least
+two complete calendar years. Partial edge years are excluded. Payment, volume,
+and download flows are summed within each period; stablecoin supply uses the
+last observation in the period.
 
 npm's public download API counts successful package tarball responses, not
 unique people. CI, disposable Docker builds, mirrors, robots, transitive

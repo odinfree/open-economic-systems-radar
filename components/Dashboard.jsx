@@ -16,7 +16,9 @@ import {
   SNAPSHOT_SCHEMA_VERSION
 } from "@/lib/schema";
 
-const RANGE_DAYS = { "90D": 90, "1Y": 365, "18M": 548 };
+const RANGE_DAYS = { "90D": 90, "1Y": 365, "18M": 548, "5Y": 1_826 };
+const DEFAULT_RANGE_OPTIONS = ["90D", "1Y", "18M"];
+const RAIL_RANGE_OPTIONS = [...DEFAULT_RANGE_OPTIONS, "5Y"];
 
 function filterRange(rows, days) {
   if (!rows?.length) return [];
@@ -129,12 +131,12 @@ function AnalyticCard({ label, value, note, help, tone = "" }) {
   );
 }
 
-function RangeSwitch({ value, onChange }) {
+function RangeSwitch({ value, onChange, options = DEFAULT_RANGE_OPTIONS }) {
   return (
     <div className="range-control">
       <span>HISTORY</span>
-      <div className="range-switch" aria-label="Chart date range">
-        {Object.keys(RANGE_DAYS).map((range) => (
+      <div className="range-switch" role="group" aria-label="Chart date range">
+        {options.map((range) => (
           <button
             type="button"
             key={range}
@@ -229,7 +231,8 @@ export default function Dashboard() {
   const [snapshot, setSnapshot] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [range, setRange] = useState("1Y");
+  const [railsRange, setRailsRange] = useState("1Y");
+  const [packageRange, setPackageRange] = useState("1Y");
   const [slot, setSlot] = useState(() => Math.floor(Date.now() / 21_600_000));
 
   const load = useCallback(async (manual = false) => {
@@ -267,14 +270,18 @@ export default function Dashboard() {
 
   const ranged = useMemo(() => {
     if (!snapshot) return {};
-    const days = RANGE_DAYS[range];
+    const railsDays = RANGE_DAYS[railsRange];
+    const packageDays = RANGE_DAYS[packageRange];
     return {
       machine: snapshot.series.machineDaily,
-      stablecoins: filterRange(snapshot.series.stablecoinSupply, days),
-      dex: filterRange(snapshot.series.dexDaily, days),
-      npm: filterRange(snapshot.series.npmDaily || snapshot.series.npmWeekly, days)
+      stablecoins: filterRange(snapshot.series.stablecoinSupply, railsDays),
+      dex: filterRange(snapshot.series.dexDaily, railsDays),
+      npm: filterRange(
+        snapshot.series.npmDaily || snapshot.series.npmWeekly,
+        packageDays
+      )
     };
-  }, [snapshot, range]);
+  }, [snapshot, railsRange, packageRange]);
 
   if (!snapshot && !error) return <LoadingState />;
 
@@ -498,8 +505,8 @@ export default function Dashboard() {
           </div>
           <p className="section-note">
             Explorer history starts {coverage.machine.start || "with the first available day"}.
-            Switch every chart between daily, weekly, and monthly totals. Yearly appears
-            once the visible data spans two calendar years.
+            Switch every chart between daily, weekly, and monthly totals. Yearly
+            unlocks when the visible data contains two complete calendar years.
           </p>
         </div>
         <div className="chart-grid">
@@ -716,9 +723,13 @@ export default function Dashboard() {
           </div>
           <div className="section-actions">
             <p className="section-note">
-              Charts start at one year. Switch to 90D or 18M.
+              Charts start at one year. Select 5Y for the annual view.
             </p>
-            <RangeSwitch value={range} onChange={setRange} />
+            <RangeSwitch
+              value={railsRange}
+              onChange={setRailsRange}
+              options={RAIL_RANGE_OPTIONS}
+            />
           </div>
         </div>
         <div className="chart-grid">
@@ -728,7 +739,7 @@ export default function Dashboard() {
             subtitle={`${rails.chainsOver1b} chains above $1B. USDT ${formatPercent(
               rails.usdtShare
             )}. USDC ${formatPercent(rails.usdcShare)}.`}
-            summary={`One-year change: ${formatPctPoint(
+            summary={`Current one-year change: ${formatPctPoint(
               analytics.stablecoinSupplyGrowth1yPct
             )}. Orange line shows the selected rolling average.`}
             help="Stablecoins are digital dollars and similar assets that move on public networks. Each point uses the last supply reading in the selected period. The orange line shows a rolling average, labelled mean."
@@ -753,7 +764,7 @@ export default function Dashboard() {
             kicker="OPEN TRADING"
             title="DEX volume"
             subtitle={`${formatNumber(rails.dexProtocols)} protocols in source coverage`}
-            summary={`90d versus prior 90d: ${formatPctPoint(
+            summary={`Current 90d versus prior 90d: ${formatPctPoint(
               analytics.dexVolume90dChangePct
             )}. Orange line shows the selected rolling average.`}
             help="DEX means decentralized exchange. The chart adds reported trading within each selected period. The orange line shows a rolling average, labelled mean."
@@ -786,7 +797,7 @@ export default function Dashboard() {
             <p className="section-note">
               npm counts tarball responses, not people. Switch between 90D, 1Y, and 18M.
             </p>
-            <RangeSwitch value={range} onChange={setRange} />
+            <RangeSwitch value={packageRange} onChange={setPackageRange} />
           </div>
         </div>
         <div className="package-layout">
