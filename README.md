@@ -18,6 +18,26 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
 The public source of record is
 [welttowelt/open-economic-systems-radar](https://github.com/welttowelt/open-economic-systems-radar).
 
+## Field note
+
+`/blog` is a dated, static analysis of the three strongest bullish signals and
+the three strongest bearish constraints in the current public data. Every claim
+has an adjacent chart. The article uses a frozen evidence file so its prose,
+values, source windows, and chart inputs remain reproducible after the live
+radar changes.
+
+Refresh the frozen evidence deliberately with:
+
+```bash
+RADAR_SNAPSHOT_URL=https://your-radar.example/api/snapshot npm run capture:blog
+```
+
+The three historical charts offer daily, weekly, and monthly aggregation, plus
+yearly aggregation when the series spans enough history. The three bearish
+charts use fixed study or current 30-day aggregates because no underlying daily
+history is published; the article labels that limit instead of manufacturing a
+time series.
+
 ## Sources
 
 - x402scan public explorer

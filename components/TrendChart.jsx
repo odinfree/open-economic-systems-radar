@@ -16,6 +16,7 @@ import {
   availableCadences,
   CHART_CADENCES,
   prepareChartRows,
+  prepareRatioChartRows,
   trendKey
 } from "@/lib/chart-series";
 
@@ -65,7 +66,12 @@ export default function TrendChart({
   defaultCadence = "daily",
   valueType = "number",
   height = 260,
-  ariaLabel
+  ariaLabel,
+  measureLabel,
+  ratio,
+  partialPeriods = false,
+  dataQualityNote,
+  axisColor = "var(--muted)"
 }) {
   const [cadence, setCadence] = useState(defaultCadence);
   const cadences = useMemo(() => availableCadences(data), [data]);
@@ -73,10 +79,15 @@ export default function TrendChart({
     if (!cadences.includes(cadence)) setCadence(cadences[0]);
   }, [cadence, cadences]);
 
-  const chartData = useMemo(
-    () => prepareChartRows(data, series.map((item) => item.key), cadence, aggregation),
-    [aggregation, cadence, data, series]
-  );
+  const chartData = useMemo(() => {
+    if (ratio) return prepareRatioChartRows(data, ratio, cadence);
+    return prepareChartRows(
+      data,
+      series.map((item) => item.key),
+      cadence,
+      aggregation
+    );
+  }, [aggregation, cadence, data, ratio, series]);
   const formatter = valueType === "currency" ? formatCurrency : formatNumber;
   const chartId = useId().replaceAll(":", "");
   const spanDays =
@@ -101,10 +112,23 @@ export default function TrendChart({
   return (
     <div className="chart-wrap">
       <div className="chart-cadence-row">
-        <span>
-          {aggregation === "last" ? "PERIOD CLOSE" : "PERIOD TOTAL"} /{" "}
-          {cadenceConfig.trendLabel.toUpperCase()}
-        </span>
+        <div className="chart-measure">
+          <span>
+            {measureLabel ||
+              (aggregation === "last" ? "PERIOD CLOSE" : "PERIOD TOTAL")}{" "}
+            /{" "}
+            {cadenceConfig.trendLabel.toUpperCase()}
+          </span>
+          {(dataQualityNote || (partialPeriods && cadence !== "daily")) && (
+            <small>
+              {[dataQualityNote, partialPeriods && cadence !== "daily"
+                ? "EDGE PERIODS MAY BE PARTIAL"
+                : null]
+                .filter(Boolean)
+                .join(" / ")}
+            </small>
+          )}
+        </div>
         <div className="chart-cadence-switch" role="group" aria-label={`${ariaLabel} cadence`}>
           {cadences.map((option) => (
             <button
@@ -148,14 +172,14 @@ export default function TrendChart({
             axisLine={false}
             tickLine={false}
             minTickGap={34}
-            tick={{ fill: "var(--muted)", fontSize: 11, fontFamily: "var(--mono)" }}
+            tick={{ fill: axisColor, fontSize: 11, fontFamily: "var(--mono)" }}
             tickFormatter={dateFormatter}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
             width={64}
-            tick={{ fill: "var(--muted)", fontSize: 11, fontFamily: "var(--mono)" }}
+            tick={{ fill: axisColor, fontSize: 11, fontFamily: "var(--mono)" }}
             tickFormatter={formatter}
           />
           <Tooltip

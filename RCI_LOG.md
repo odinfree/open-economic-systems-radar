@@ -322,3 +322,96 @@ Review date: 2026-07-19
   CHECK`, and keep all personal names out of the frontend.
 - Verification: 21/21 tests pass, including wording and snapshot-contract
   checks.
+
+# Five-cycle RCI record — bull and bear field note
+
+Review date: 2026-07-20
+
+## RCI 1 — Frozen evidence and source boundaries
+
+- Problem: the first draft mixed 31 days of x402scan history with only eight
+  observed MPPscan days. It also displayed the live radar score without
+  preserving enough inputs to recompute that score.
+- Evidence: the combined density series changed its source population after day
+  23, while the article snapshot stored chart inputs but not every score
+  component and threshold.
+- Consequence: the chart could turn a coverage change into an economic signal,
+  and the numeric score was not reproducible from the article artifact.
+- Smallest fix: use x402scan alone for the 31-day density trend, disclose the
+  eight excluded MPPscan days, remove the score from the field note, and require
+  all six article-specific sources to be healthy before capture.
+- Verification: the frozen artifact reports `6/6` article sources, contains
+  three bullish and three bearish evidence groups, and stores no unreproducible
+  verdict.
+
+## RCI 2 — Chart calculation and missing-data truth
+
+- Problem: the first ratio trend averaged period ratios instead of dividing
+  rolling value sums by rolling record sums. npm also returned a shared zero on
+  2026-07-12 that behaved like a data gap rather than zero package activity.
+- Evidence: a weighted fixture differs sharply from the mean of its component
+  ratios; the npm API returned zero for both tracked packages and for a
+  high-volume control package between large adjacent-day counts.
+- Consequence: low-volume periods could receive too much weight, and a registry
+  outage could appear as a demand collapse.
+- Smallest fix: calculate density from period and rolling sums, store the shared
+  npm day as `null`, call the 28-day totals lower bounds over 27 observed days,
+  and label partial edge periods. Fixed study and current aggregates state that
+  no daily series was published.
+- Verification: 30/30 tests pass, including weighted ratio, rolling ratio,
+  explicit-gap, cadence, source-boundary, and evidence-contract cases. The
+  three historical charts show Daily, Weekly, Monthly, and Yearly when
+  available; the three fixed-window charts do not invent cadence data.
+
+## RCI 3 — Claims, wording, and attribution
+
+- Problem: several phrases exceeded the evidence: `agent payments`, `largest
+  study`, `4.66× more`, and a 45.9% upper ceiling described as independently
+  attributable value.
+- Evidence: the cited paper calls itself the first population-scale
+  measurement, defines 45.92% as value not provably manufactured, and fixes its
+  Base window to 2025-09-17 through 2026-06-23. Provider ratios describe
+  multiples, not `times more`.
+- Consequence: precise charts could sit beside imprecise claims.
+- Smallest fix: use `machine-payment rails`, print the exact study dates,
+  separate the demonstrable 0.43% floor from the 45.9% ceiling, use
+  `4.66× x402scan's count`, and state that server concentration does not
+  establish ownership.
+- Verification: the Writing Cluster and Stop Slop scans find no banned filler,
+  decorative separator, unsupported developer-adoption claim, personal name,
+  or incorrect ratio phrase in the article surface.
+
+## RCI 4 — Mobile reading, explanations, and contrast
+
+- Problem: the long article lost all jump navigation on phones, small muted
+  labels fell below a 4.5:1 contrast target, and fixed-position popover geometry
+  could leave the viewport.
+- Evidence: the initial phone rule hid the complete article nav; the muted color
+  measured about 4.13:1 on panels.
+- Consequence: readers could be forced through the full page and struggle to
+  read evidence metadata or technical definitions.
+- Smallest fix: add a phone `Read` menu, use the body color for article
+  metadata and axes, use dark text on the orange active cadence button, add
+  `aria-describedby`, and shift each open explanation inside an 18px viewport
+  gutter.
+- Verification: production browser passes at 1280px and 390px have no
+  horizontal overflow or console errors. The page exposes six figures, all
+  expected cadence controls, three fixed-window disclosures, a working phone
+  menu, and explanation popovers that remain inside the viewport. Relevant
+  text contrast is 8.30:1 or higher; the active cadence button is 6.09:1.
+
+## RCI 5 — Reproducible package and publication readiness
+
+- Problem: the first production attempt found an incomplete cached workerd
+  package, and the article's frozen-data link could not resolve until the
+  source commit reached GitHub.
+- Evidence: the Next.js build passed, but the Cloudflare packaging step lacked
+  the native workerd executable.
+- Consequence: a source-only success could be mistaken for a deployable build.
+- Smallest fix: reinstall the locked dependencies, run the full Cloudflare
+  OpenNext build, keep the frozen artifact in the public repository, and deploy
+  only after the identical commit is pushed.
+- Verification: the full production build completes; the local worker returns
+  HTTP 200 for `/`, `/blog`, and `/api/snapshot`; the API reports schema 1.5.0
+  and ready source data. Production dependencies have no high or critical
+  audit findings.

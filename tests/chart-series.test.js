@@ -3,6 +3,7 @@ import {
   aggregateChartRows,
   availableCadences,
   prepareChartRows,
+  prepareRatioChartRows,
   trendKey
 } from "../lib/chart-series";
 
@@ -66,5 +67,56 @@ describe("chart cadence aggregation", () => {
     }));
     const prepared = prepareChartRows(rows, ["value"], "daily", "sum");
     expect(prepared.at(-1)[trendKey("value")]).toBe(5);
+  });
+
+  it("calculates density from period sums instead of averaging daily ratios", () => {
+    const prepared = prepareRatioChartRows(
+      [
+        { date: "2026-07-13", value: 100, records: 10 },
+        { date: "2026-07-14", value: 100, records: 90 }
+      ],
+      {
+        numeratorKey: "value",
+        denominatorKey: "records",
+        outputKey: "density",
+        multiplier: 1_000
+      },
+      "weekly"
+    );
+
+    expect(prepared).toHaveLength(1);
+    expect(prepared[0].density).toBe(2_000);
+    expect(prepared[0][trendKey("density")]).toBe(2_000);
+  });
+
+  it("calculates the density trend from rolling sums instead of mean ratios", () => {
+    const prepared = prepareRatioChartRows(
+      [
+        { date: "2026-07-06", value: 100, records: 10 },
+        { date: "2026-07-13", value: 100, records: 90 }
+      ],
+      {
+        numeratorKey: "value",
+        denominatorKey: "records",
+        outputKey: "density",
+        multiplier: 1_000
+      },
+      "weekly"
+    );
+
+    expect(prepared.at(-1).density).toBeCloseTo(1_111.11, 2);
+    expect(prepared.at(-1)[trendKey("density")]).toBe(2_000);
+  });
+
+  it("keeps explicit data gaps out of daily totals", () => {
+    const prepared = prepareChartRows(
+      [{ date: "2026-07-12", value: null }],
+      ["value"],
+      "daily",
+      "sum"
+    );
+
+    expect(prepared[0].value).toBeUndefined();
+    expect(prepared[0][trendKey("value")]).toBeNull();
   });
 });

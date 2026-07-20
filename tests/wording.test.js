@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 const PUBLIC_COPY_FILES = [
   "app/layout.jsx",
+  "app/blog/page.jsx",
   "components/Dashboard.jsx",
+  "components/article/InlineTermTip.jsx",
+  "components/article/ProviderGapChart.jsx",
+  "components/article/StackedShareChart.jsx",
   "lib/fetchers.js",
   "lib/metrics.js"
 ];

@@ -339,6 +339,7 @@ export default function Dashboard() {
           <a href="#machine">Payments</a>
           <a href="#rails">Markets</a>
           <a href="#quality">Quality</a>
+          <a href="/blog">Analysis</a>
           <a href="#sources">Sources</a>
           <a
             href="https://github.com/welttowelt/open-economic-systems-radar"
@@ -1047,6 +1048,7 @@ export default function Dashboard() {
       <footer>
         <div className="radar-mark">OES <span>/</span> RADAR</div>
         <p>Methodology v{snapshot.meta.methodologyVersion}</p>
+        <a href="/blog">Bull and bear analysis</a>
         <a
           href="https://github.com/welttowelt/open-economic-systems-radar"
           target="_blank"
