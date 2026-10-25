@@ -27,7 +27,7 @@ export const metadata = {
 };
 
 const frozenEvidenceHref =
-  "https://github.com/welttowelt/open-economic-systems-radar/blob/main/data/open-economic-systems-2026-07-20.json";
+  "https://github.com/odinfree/open-economic-systems-radar/blob/main/data/open-economic-systems-2026-07-20.json";
 
 function SourceLine({ window, source, href, note }) {
   return (
@@ -586,7 +586,7 @@ export default function BlogPage() {
         <p>Published 20 Jul 2026</p>
         <Link href="/">Live radar</Link>
         <a
-          href="https://github.com/welttowelt/open-economic-systems-radar"
+          href="https://github.com/odinfree/open-economic-systems-radar"
           target="_blank"
           rel="noreferrer"
         >

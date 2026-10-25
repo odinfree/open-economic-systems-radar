@@ -217,7 +217,7 @@ const articleEvidence = {
     },
     {
       label: "Frozen evidence snapshot",
-      url: "https://github.com/welttowelt/open-economic-systems-radar/blob/main/data/open-economic-systems-2026-07-20.json"
+      url: "https://github.com/odinfree/open-economic-systems-radar/blob/main/data/open-economic-systems-2026-07-20.json"
     },
     {
       label: "npm download-count methodology",

@@ -16,7 +16,7 @@ activity. It refreshes source data in six-hour cache windows and distinguishes:
   when the visible source history contains two complete calendar years.
 
 The public source of record is
-[welttowelt/open-economic-systems-radar](https://github.com/welttowelt/open-economic-systems-radar).
+[welttowelt/open-economic-systems-radar](https://github.com/odinfree/open-economic-systems-radar).
 
 ## Field note
 

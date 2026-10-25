@@ -349,7 +349,7 @@ export default function Dashboard() {
           <a href="/blog">Analysis</a>
           <a href="#sources">Sources</a>
           <a
-            href="https://github.com/welttowelt/open-economic-systems-radar"
+            href="https://github.com/odinfree/open-economic-systems-radar"
             target="_blank"
             rel="noreferrer"
           >
@@ -1061,7 +1061,7 @@ export default function Dashboard() {
         <p>Methodology v{snapshot.meta.methodologyVersion}</p>
         <a href="/blog">Bull and bear analysis</a>
         <a
-          href="https://github.com/welttowelt/open-economic-systems-radar"
+          href="https://github.com/odinfree/open-economic-systems-radar"
           target="_blank"
           rel="noreferrer"
         >
